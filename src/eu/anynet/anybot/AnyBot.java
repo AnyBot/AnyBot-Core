@@ -5,7 +5,8 @@
 package eu.anynet.anybot;
 
 import eu.anynet.anybot.bot.Bot;
-import eu.anynet.anybot.bot.NamedThreadPool;
+import eu.anynet.anybot.bot.BotThread;
+import eu.anynet.anybot.bot.ThreadManager;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
@@ -27,42 +28,26 @@ import org.jibble.pircbot.NickAlreadyInUseException;
 public class AnyBot {
 
 
-   class MyTestThread extends Thread
-   {
-
-      @Override
-      public void run() {
-         int count =0;
-         while(!Thread.currentThread().isInterrupted())
-         {
-            count++;
-            System.out.println("["+this.getName()+"] Hello, "+count+". run, interrupted: "+(this.isInterrupted()?"true":"false"));
-            try {
-               Thread.sleep(3000);
-            } catch (InterruptedException ex) {
-               System.out.println("Interrupted!");
-            }
-         }
-         System.out.println("["+this.getName()+"] Bye!");
-      }
-
-   }
-
 
    AnyBot()
    {
       CommandLineParser parser = new CommandLineParser();
 
-      final NamedThreadPool pool = new NamedThreadPool();
+      final ThreadManager pool = new ThreadManager();
 
       parser.addCommandLineListener(new CommandLineListener() {
          @Override
          public void handleCommand(CommandLineEvent e) {
             if(e.get(0).equals("start") && e.count()>1)
             {
-               MyTestThread newthread = new MyTestThread();
-               newthread.setName(e.get(1));
-               pool.add(newthread);
+               try {
+                  BotThread newthread = new BotThread();
+                  newthread.setName(e.get(1));
+                  pool.add(newthread);
+                  pool.start(e.get(1));
+               } catch(Exception ex) {
+                  ex.printStackTrace();
+               }
             }
          }
       });
@@ -73,7 +58,7 @@ public class AnyBot {
          public void handleCommand(CommandLineEvent e) {
             if(e.get(0).equals("stop") && e.count()>1)
             {
-               pool.cancel(e.get(1));
+               pool.kill(e.get(1));
             }
          }
       });
@@ -84,6 +69,17 @@ public class AnyBot {
             if(e.get(0).equals("exit"))
             {
                System.exit(0);
+            }
+         }
+      });
+
+      parser.addCommandLineListener(new CommandLineListener() {
+
+         @Override
+         public void handleCommand(CommandLineEvent e) {
+            if(e.get(0).equals("send"))
+            {
+               pool.send(e.get(1), e.get(2, -1)+"\n");
             }
          }
       });
