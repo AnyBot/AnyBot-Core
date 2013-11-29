@@ -4,12 +4,13 @@
  */
 package eu.anynet.anybot.bot;
 
+import eu.anynet.java.util.CommandLineEvent;
+import eu.anynet.java.util.CommandLineListener;
+import eu.anynet.java.util.CommandLineParser;
 import java.io.IOException;
-import java.io.PipedReader;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.jibble.pircbot.IrcException;
-import org.jibble.pircbot.NickAlreadyInUseException;
 
 /**
  *
@@ -19,10 +20,12 @@ public class BotThread extends Thread {
 
    private Bot bot;
    private ThreadPipes pipes;
+   private ArrayList<String> joinedchannels;
 
    public BotThread() throws IOException
    {
       this.pipes = new ThreadPipes();
+      this.joinedchannels = new ArrayList<>();
    }
 
    public ThreadPipeEndpoint getPipeEndpoint()
@@ -46,11 +49,62 @@ public class BotThread extends Thread {
       try {
          String host = this.getName();
          this.bot = new Bot();
+         this.bot.enableAutoReconnect();
+
+         this.bot.addConnectListener(new ConnectListener() {
+            @Override
+            public void handleConnect(Bot bot) {
+               System.out.println("["+bot.getServer()+"] Connected!");
+               for(String channel : joinedchannels)
+               {
+                  System.out.println("["+bot.getServer()+"] Join "+channel);
+                  bot.joinChannel(channel);
+               }
+            }
+         });
+
          this.bot.connect(host);
+
+         CommandLineParser parser = new CommandLineParser();
+
+         parser.addCommandLineListener(new CommandLineListener() {
+            @Override
+            public void handleCommand(CommandLineEvent e) {
+               if(e.get(0).equals("join"))
+               {
+                  bot.joinChannel(e.get(1));
+                  joinedchannels.add(e.get(1));
+               }
+            }
+         });
+
+         parser.addCommandLineListener(new CommandLineListener() {
+
+            @Override
+            public void handleCommand(CommandLineEvent e) {
+               if(e.get(0).equals("part"))
+               {
+                  bot.partChannel(e.get(1));
+                  joinedchannels.remove(e.get(1));
+               }
+            }
+         });
+
+         parser.addCommandLineListener(new CommandLineListener() {
+
+            @Override
+            public void handleCommand(CommandLineEvent e) {
+               if(e.get(0).equals("quit"))
+               {
+                  bot.disableAutoReconnect();
+                  bot.quitServer();
+               }
+            }
+         });
 
          while(true)
          {
-            System.out.println("["+this.getName()+" via pipe] "+this.readPipeLine());
+            parser.handleCommandLine(this.readPipeLine());
          }
 
       } catch (Exception ex) {

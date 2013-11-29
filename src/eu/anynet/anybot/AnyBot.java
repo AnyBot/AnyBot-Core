@@ -4,22 +4,12 @@
  */
 package eu.anynet.anybot;
 
-import eu.anynet.anybot.bot.Bot;
 import eu.anynet.anybot.bot.BotThread;
 import eu.anynet.anybot.bot.ThreadManager;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.Scanner;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.jibble.pircbot.IrcException;
-import org.jibble.pircbot.NickAlreadyInUseException;
 
 /**
  *
