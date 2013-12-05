@@ -17,13 +17,26 @@ import org.jibble.pircbot.PircBot;
  */
 public class Bot extends PircBot {
 
-   private ArrayList<ConnectListener> connectlistenerList = new ArrayList<>();
-   private ArrayList<DisconnectListener> disconnectlistenerList = new ArrayList<>();
+   private ArrayList<Module> modules = new ArrayList<>();
    private boolean autoreconnect=false;
 
 
    public Bot() {
-      this.setName("AnyBot");
+      this.setName("AnyBotDev");
+   }
+
+
+   public void addModule(Module newmod)
+   {
+      if(!this.modules.contains(newmod))
+      {
+         this.modules.add(newmod);
+      }
+   }
+
+   private synchronized ArrayList<Module> cloneModuleList()
+   {
+      return (ArrayList<Module>) this.modules.clone();
    }
 
    public void enableAutoReconnect(boolean b)
@@ -49,11 +62,12 @@ public class Bot extends PircBot {
    @Override
    public void onMessage(String channel, String sender, String login, String hostname, String message)
    {
-      //System.out.println("["+channel+"] <"+sender+"> "+message);
-      if (message.equalsIgnoreCase("time")) {
-         String time = new java.util.Date().toString();
-         sendMessage(channel, sender + ": The time is now " + time+ "(In answer to "+login+")");
-      }
+      ChatMessage newmsg = new ChatMessage(this);
+      newmsg.setChannel(channel);
+      newmsg.setNick(sender);
+      newmsg.setIdent(login);
+      newmsg.setHost(hostname);
+      newmsg.setMessage(message);
    }
 
 
@@ -61,17 +75,9 @@ public class Bot extends PircBot {
    public void onConnect()
    {
       System.out.println("Connected!");
-      ArrayList<ConnectListener> locallist;
-      synchronized (this) {
-         if (this.connectlistenerList.isEmpty())
-         {
-            return;
-         }
-         locallist = (ArrayList<ConnectListener>) this.connectlistenerList.clone();
-      }
-
-      for (ConnectListener listener : locallist) {
-         listener.handleConnect(this);
+      ArrayList<Module> locallist = this.cloneModuleList();
+      for (Module listener : locallist) {
+         listener.onConnect(new ChatEvent(this));
       }
    }
 
@@ -97,41 +103,25 @@ public class Bot extends PircBot {
          }
       }
 
-      ArrayList<DisconnectListener> locallist;
-      synchronized (this) {
-         if (this.disconnectlistenerList.isEmpty())
-         {
-            return;
-         }
-         locallist = (ArrayList<DisconnectListener>) this.disconnectlistenerList.clone();
-      }
-
-      for (DisconnectListener listener : locallist) {
-         listener.handleDisconnect(this);
+      ArrayList<Module> locallist = this.cloneModuleList();
+      for (Module listener : locallist) {
+         listener.onDisconnect(new ChatEvent(this));
       }
    }
 
    @Override
    public void onInvite(String targetNick, String sourceNick, String sourceLogin, String sourceHostname, String channel)
    {
-      this.joinChannel(channel);
-   }
+      ChatMessage newmsg = new ChatMessage(this);
+      newmsg.setChannel(channel);
+      newmsg.setNick(sourceNick);
+      newmsg.setIdent(sourceLogin);
+      newmsg.setHost(sourceHostname);
+      newmsg.setMessage(targetNick);
 
-
-   public synchronized void addConnectListener(ConnectListener newl)
-   {
-      if(!this.connectlistenerList.contains(newl))
-      {
-         this.connectlistenerList.add(newl);
-      }
-   }
-
-
-   public synchronized void addDisconnectListener(DisconnectListener newl)
-   {
-      if(!this.disconnectlistenerList.contains(newl))
-      {
-         this.disconnectlistenerList.add(newl);
+      ArrayList<Module> locallist = this.cloneModuleList();
+      for (Module listener : locallist) {
+         listener.onInvite(newmsg);
       }
    }
 

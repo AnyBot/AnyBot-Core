@@ -51,14 +51,24 @@ public class BotThread extends Thread {
          this.bot = new Bot();
          this.bot.enableAutoReconnect();
 
-         this.bot.addConnectListener(new ConnectListener() {
+         this.bot.addModule(new Module() {
             @Override
-            public void handleConnect(Bot bot) {
-               System.out.println("["+bot.getServer()+"] Connected!");
+            public void onConnect(ChatEvent ev) {
+               System.out.println("["+ev.getBot().getServer()+"] Connected!");
                for(String channel : joinedchannels)
                {
-                  System.out.println("["+bot.getServer()+"] Join "+channel);
-                  bot.joinChannel(channel);
+                  System.out.println("["+ev.getBot().getServer()+"] Join "+channel);
+                  ev.getBot().joinChannel(channel);
+               }
+            }
+         });
+
+         this.bot.addModule(new Module() {
+            @Override
+            public void onInvite(ChatMessage msg) {
+               if(msg.getBot().getNick().equals(msg.getMessage()))
+               {
+                  msg.getBot().joinChannel(msg.getChannel());
                }
             }
          });
