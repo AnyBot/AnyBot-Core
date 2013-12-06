@@ -11,6 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.jibble.pircbot.IrcException;
 
 /**
  *
@@ -19,8 +20,8 @@ import java.util.logging.Logger;
 public class BotThread extends Thread {
 
    private Bot bot;
-   private ThreadPipes pipes;
-   private ArrayList<String> joinedchannels;
+   private final ThreadPipes pipes;
+   private final ArrayList<String> joinedchannels;
 
    public BotThread() throws IOException
    {
@@ -89,7 +90,6 @@ public class BotThread extends Thread {
          });
 
          parser.addCommandLineListener(new CommandLineListener() {
-
             @Override
             public void handleCommand(CommandLineEvent e) {
                if(e.get(0).equals("part"))
@@ -101,7 +101,6 @@ public class BotThread extends Thread {
          });
 
          parser.addCommandLineListener(new CommandLineListener() {
-
             @Override
             public void handleCommand(CommandLineEvent e) {
                if(e.get(0).equals("quit"))
@@ -117,7 +116,7 @@ public class BotThread extends Thread {
             parser.handleCommandLine(this.readPipeLine());
          }
 
-      } catch (Exception ex) {
+      } catch (IOException | IrcException ex) {
          Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
       }
    }

@@ -9,6 +9,7 @@ import eu.anynet.anybot.bot.ThreadManager;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
+import java.io.IOException;
 import java.util.Scanner;
 
 /**
@@ -16,13 +17,11 @@ import java.util.Scanner;
  * @author sim
  */
 public class AnyBot {
-
-
-
-   AnyBot()
+   
+   
+   public void begin()
    {
-      CommandLineParser parser = new CommandLineParser();
-
+      final CommandLineParser parser = new CommandLineParser();
       final ThreadManager pool = new ThreadManager();
 
       parser.addCommandLineListener(new CommandLineListener() {
@@ -35,7 +34,7 @@ public class AnyBot {
                   newthread.setName(e.get(1));
                   pool.add(newthread);
                   pool.start(e.get(1));
-               } catch(Exception ex) {
+               } catch(IOException ex) {
                   ex.printStackTrace();
                }
             }
@@ -43,7 +42,6 @@ public class AnyBot {
       });
 
       parser.addCommandLineListener(new CommandLineListener() {
-
          @Override
          public void handleCommand(CommandLineEvent e) {
             if(e.get(0).equals("stop") && e.count()>1)
@@ -64,7 +62,6 @@ public class AnyBot {
       });
 
       parser.addCommandLineListener(new CommandLineListener() {
-
          @Override
          public void handleCommand(CommandLineEvent e) {
             if(e.get(0).equals("send"))
@@ -81,7 +78,6 @@ public class AnyBot {
          System.out.print("> ");
          parser.handleCommandLine(in.nextLine());
       }
-
    }
 
 
@@ -90,16 +86,8 @@ public class AnyBot {
     */
    public static void main(String[] args)
    {
-      /*Bot bot = new Bot();
-      try {
-      bot.connect("iz-smart.net");
-      } catch (NickAlreadyInUseException ex) {
-      Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
-      } catch (IrcException | IOException ex) {
-      Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
-      }*/
       AnyBot anyBot = new AnyBot();
-
+      anyBot.begin();
    }
 
 }
