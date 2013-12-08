@@ -52,6 +52,14 @@ public class ThreadManager {
       }
    }
 
+   public void killAll()
+   {
+      for(String thr : this.threads.keySet())
+      {
+         this.kill(thr);
+      }
+   }
+
    public void start(String instancename)
    {
       if(this.instanceExist(instancename))

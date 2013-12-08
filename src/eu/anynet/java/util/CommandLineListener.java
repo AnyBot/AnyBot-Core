@@ -10,8 +10,20 @@ import java.util.EventListener;
  *
  * @author sim
  */
-public interface CommandLineListener extends EventListener {
+abstract public class CommandLineListener implements EventListener {
 
-   public void handleCommand(CommandLineEvent e);
+   private String regex;
+
+   public CommandLineListener(String check_regex)
+   {
+      this.regex = check_regex;
+   }
+
+   public boolean isResponsible(String message)
+   {
+      return Regex.isRegexTrue(message, this.regex);
+   }
+
+   abstract public void handleCommand(CommandLineEvent e);
 
 }

@@ -4,13 +4,13 @@
  */
 package eu.anynet.anybot.bot;
 
+import eu.anynet.anybot.module.TimerDemo;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jibble.pircbot.IrcException;
 
 /**
@@ -34,7 +34,7 @@ public class BotThread extends Thread {
       return this.pipes.getOutsideEndpoint();
    }
 
-   private String readPipeLine() throws IOException
+   private String readPipeLine() throws IOException, InterruptedIOException
    {
       return this.pipes.getInsideEndpoint().receive();
    }
@@ -50,7 +50,8 @@ public class BotThread extends Thread {
       try {
          String host = this.getName();
          this.bot = new Bot();
-         this.bot.enableAutoReconnect();
+
+         this.bot.addModule(new TimerDemo());
 
          this.bot.addModule(new Module() {
             @Override
@@ -69,45 +70,47 @@ public class BotThread extends Thread {
             public void onInvite(ChatMessage msg) {
                if(msg.getBot().getNick().equals(msg.getMessage()))
                {
-                  msg.getBot().joinChannel(msg.getChannel());
+                  String chan = msg.getChannel();
+                  msg.getBot().joinChannel(chan);
+                  if(!joinedchannels.contains(chan)) {
+                     joinedchannels.add(chan);
+                  }
                }
             }
          });
 
+         this.bot.enableAutoReconnect();
          this.bot.connect(host);
 
          CommandLineParser parser = new CommandLineParser();
 
-         parser.addCommandLineListener(new CommandLineListener() {
+         parser.addCommandLineListener(new CommandLineListener("^join") {
             @Override
             public void handleCommand(CommandLineEvent e) {
-               if(e.get(0).equals("join"))
-               {
-                  bot.joinChannel(e.get(1));
-                  joinedchannels.add(e.get(1));
+               String chan = e.get(1);
+               bot.joinChannel(chan);
+               if(!joinedchannels.contains(chan)) {
+                  joinedchannels.add(chan);
                }
             }
          });
 
-         parser.addCommandLineListener(new CommandLineListener() {
+         parser.addCommandLineListener(new CommandLineListener("^part") {
             @Override
             public void handleCommand(CommandLineEvent e) {
-               if(e.get(0).equals("part"))
-               {
-                  bot.partChannel(e.get(1));
-                  joinedchannels.remove(e.get(1));
+               String chan = e.get(1);
+               bot.partChannel(chan);
+               if(joinedchannels.contains(chan)) {
+                  joinedchannels.remove(chan);
                }
             }
          });
 
-         parser.addCommandLineListener(new CommandLineListener() {
+         parser.addCommandLineListener(new CommandLineListener("^quit") {
             @Override
             public void handleCommand(CommandLineEvent e) {
-               if(e.get(0).equals("quit"))
-               {
-                  bot.disableAutoReconnect();
-                  bot.quitServer();
-               }
+               bot.disableAutoReconnect();
+               bot.quitServer();
             }
          });
 
@@ -116,8 +119,16 @@ public class BotThread extends Thread {
             parser.handleCommandLine(this.readPipeLine());
          }
 
-      } catch (IOException | IrcException ex) {
-         Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      catch(InterruptedIOException ex)
+      {
+         System.out.println("["+this.bot.getServer()+"] Thread exited.");
+         this.bot.disconnect();
+         this.bot.dispose();
+      }
+      catch (IOException | IrcException ex)
+      {
+         System.out.println("["+this.bot.getServer()+"] Error: "+ex.getMessage());
       }
    }
 

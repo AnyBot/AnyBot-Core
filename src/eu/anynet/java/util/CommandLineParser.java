@@ -39,7 +39,10 @@ public class CommandLineParser {
       }
 
       for (CommandLineListener listener : locallist) {
-         listener.handleCommand(e);
+         if(listener.isResponsible(e.get()))
+         {
+            listener.handleCommand(e);
+         }
       }
    }
 

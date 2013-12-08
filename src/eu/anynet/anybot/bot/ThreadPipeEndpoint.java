@@ -5,6 +5,7 @@
 package eu.anynet.anybot.bot;
 
 import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.io.PipedReader;
 import java.io.PipedWriter;
 
@@ -29,7 +30,7 @@ public class ThreadPipeEndpoint {
       this.writer.flush();
    }
 
-   public String receive() throws IOException
+   public String receive() throws IOException, InterruptedIOException
    {
       StringBuilder rtext = new StringBuilder();
       int c ;

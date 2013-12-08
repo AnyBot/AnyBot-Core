@@ -4,17 +4,21 @@
  */
 package eu.anynet.anybot.bot;
 
+import eu.anynet.java.util.ArgumentInterface;
+import eu.anynet.java.util.Arguments;
+
 /**
  *
  * @author sim
  */
-public class ChatMessage extends ChatEvent {
+public class ChatMessage extends ChatEvent implements ArgumentInterface {
 
    private String nick;
    private String ident;
    private String host;
    private String channel;
    private String message;
+   private Arguments args;
 
 
    public ChatMessage(Bot bot)
@@ -61,6 +65,32 @@ public class ChatMessage extends ChatEvent {
 
    public void setMessage(String message) {
       this.message = message;
+      this.args = new Arguments(this.message);
+   }
+
+   @Override
+   public int count() {
+      return this.args.count();
+   }
+
+   @Override
+   public String get() {
+      return this.args.get();
+   }
+
+   @Override
+   public String get(int i) {
+      return this.args.get(i);
+   }
+
+   @Override
+   public String get(int start, int end, String glue) {
+      return this.args.get(start, end, glue);
+   }
+
+   @Override
+   public String get(int start, int end) {
+      return this.get(start, end);
    }
 
 

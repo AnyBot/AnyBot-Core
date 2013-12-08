@@ -30,6 +30,7 @@ public class Bot extends PircBot {
    {
       if(!this.modules.contains(newmod))
       {
+         newmod.setBot(this);
          this.modules.add(newmod);
       }
    }
@@ -68,6 +69,11 @@ public class Bot extends PircBot {
       newmsg.setIdent(login);
       newmsg.setHost(hostname);
       newmsg.setMessage(message);
+
+      ArrayList<Module> locallist = this.cloneModuleList();
+      for (Module listener : locallist) {
+         listener.onMessage(newmsg);
+      }
    }
 
 
