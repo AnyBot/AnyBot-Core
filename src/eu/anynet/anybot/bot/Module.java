@@ -22,6 +22,8 @@ public abstract class Module
 
    public void onPart(ChatMessage msg) {  }
 
+   public void onKick(ChatMessage msg) {  }
+
    public void onMessage(ChatMessage msg) {  }
 
    public void onInvite(ChatMessage msg) {  }
@@ -42,7 +44,6 @@ public abstract class Module
       {
          throw new IllegalArgumentException("Bot object not set");
       }
-
       return this.bot;
    }
 

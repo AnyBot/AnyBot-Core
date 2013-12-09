@@ -131,5 +131,55 @@ public class Bot extends PircBot {
       }
    }
 
+   @Override
+   protected void onJoin(String channel, String sender, String login, String hostname)
+   {
+      ChatMessage newmsg = new ChatMessage(this);
+      newmsg.setChannel(channel);
+      newmsg.setNick(sender);
+      newmsg.setIdent(login);
+      newmsg.setHost(hostname);
+      newmsg.setMessage("join");
+
+      ArrayList<Module> locallist = this.cloneModuleList();
+      for (Module listener : locallist) {
+         listener.onJoin(newmsg);
+      }
+   }
+
+   @Override
+   protected void onPart(String channel, String sender, String login, String hostname)
+   {
+      ChatMessage newmsg = new ChatMessage(this);
+      newmsg.setChannel(channel);
+      newmsg.setNick(sender);
+      newmsg.setIdent(login);
+      newmsg.setHost(hostname);
+      newmsg.setMessage("part");
+
+      ArrayList<Module> locallist = this.cloneModuleList();
+      for (Module listener : locallist) {
+         listener.onPart(newmsg);
+      }
+   }
+
+   @Override
+   protected void onKick(String channel, String kickerNick, String kickerLogin, String kickerHostname, String recipientNick, String reason)
+   {
+      ChatMessage newmsg = new ChatMessage(this);
+      newmsg.setChannel(channel);
+      newmsg.setNick(kickerNick);
+      newmsg.setIdent(kickerLogin);
+      newmsg.setHost(kickerHostname);
+      newmsg.setRecipient(recipientNick);
+      newmsg.setMessage(reason);
+
+      ArrayList<Module> locallist = this.cloneModuleList();
+      for (Module listener : locallist) {
+         listener.onKick(newmsg);
+      }
+   }
+
+
 
 }

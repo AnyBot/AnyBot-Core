@@ -40,7 +40,7 @@ public class CommandLineEvent implements ArgumentInterface {
 
    @Override
    public String get(int start, int end) {
-      return this.get(start, end);
+      return this.args.get(start, end);
    }
 
 

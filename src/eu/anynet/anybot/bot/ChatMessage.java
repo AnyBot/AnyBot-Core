@@ -17,6 +17,7 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
    private String ident;
    private String host;
    private String channel;
+   private String recipient;
    private String message;
    private Arguments args;
 
@@ -43,6 +44,10 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
       return channel;
    }
 
+   public String getRecipient() {
+      return recipient;
+   }
+
    public String getMessage() {
       return message;
    }
@@ -61,6 +66,10 @@ public class ChatMessage extends ChatEvent implements ArgumentInterface {
 
    public void setChannel(String channel) {
       this.channel = channel;
+   }
+
+   public void setRecipient(String recipient) {
+      this.recipient = recipient;
    }
 
    public void setMessage(String message) {

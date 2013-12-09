@@ -11,6 +11,7 @@ import eu.anynet.java.util.CommandLineParser;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.ArrayList;
+import org.apache.commons.lang3.StringUtils;
 import org.jibble.pircbot.IrcException;
 
 /**
@@ -63,18 +64,38 @@ public class BotThread extends Thread {
                   ev.getBot().joinChannel(channel);
                }
             }
-         });
-
-         this.bot.addModule(new Module() {
             @Override
             public void onInvite(ChatMessage msg) {
                if(msg.getBot().getNick().equals(msg.getMessage()))
                {
                   String chan = msg.getChannel();
                   msg.getBot().joinChannel(chan);
-                  if(!joinedchannels.contains(chan)) {
-                     joinedchannels.add(chan);
-                  }
+               }
+            }
+            @Override
+            public void onJoin(ChatMessage msg) {
+               if(msg.getNick().equals(msg.getBot().getNick()) && !joinedchannels.contains(msg.getChannel())) {
+                  joinedchannels.add(msg.getChannel());
+               }
+            }
+            @Override
+            public void onPart(ChatMessage msg) {
+               if(msg.getNick().equals(msg.getBot().getNick()) && joinedchannels.contains(msg.getChannel())) {
+                  joinedchannels.remove(msg.getChannel());
+               }
+            }
+            @Override
+            public void onKick(ChatMessage msg) {
+               if(msg.getRecipient().equals(msg.getBot().getNick()) && joinedchannels.contains(msg.getChannel()))
+               {
+                  joinedchannels.remove(msg.getChannel());
+               }
+            }
+            @Override
+            public void onMessage(ChatMessage msg) {
+               if(msg.get(0).equalsIgnoreCase("channels"))
+               {
+                  msg.respond(StringUtils.join(joinedchannels, ", "));
                }
             }
          });
@@ -89,9 +110,6 @@ public class BotThread extends Thread {
             public void handleCommand(CommandLineEvent e) {
                String chan = e.get(1);
                bot.joinChannel(chan);
-               if(!joinedchannels.contains(chan)) {
-                  joinedchannels.add(chan);
-               }
             }
          });
 
@@ -100,9 +118,6 @@ public class BotThread extends Thread {
             public void handleCommand(CommandLineEvent e) {
                String chan = e.get(1);
                bot.partChannel(chan);
-               if(joinedchannels.contains(chan)) {
-                  joinedchannels.remove(chan);
-               }
             }
          });
 
