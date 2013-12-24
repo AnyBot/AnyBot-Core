@@ -12,10 +12,22 @@ abstract public class TimerTask {
 
    private boolean isstarted;
    private Thread worker;
+   private final long millis;
 
    public TimerTask(final long millis)
    {
       this.isstarted = false;
+      this.worker = null;
+      this.millis = millis;
+   }
+
+   public void start()
+   {
+      if(this.isstarted || this.worker!=null)
+      {
+         throw new IllegalStateException("Thread was already started");
+      }
+
       final TimerTask me = this;
       this.worker = new Thread()
       {
@@ -36,14 +48,6 @@ abstract public class TimerTask {
             }
          }
       };
-   }
-
-   public void start()
-   {
-      if(this.isstarted)
-      {
-         throw new IllegalStateException("Thread was already started");
-      }
 
       this.isstarted = true;
       this.worker.start();
@@ -52,6 +56,8 @@ abstract public class TimerTask {
    public void stop()
    {
       this.worker.interrupt();
+      this.worker=null;
+      this.isstarted=false;
    }
 
    public void doWork()

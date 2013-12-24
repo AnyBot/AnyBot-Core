@@ -22,7 +22,7 @@ public class Bot extends PircBot {
 
 
    public Bot() {
-      this.setName("AnyBotDev");
+      this.setName("AnyBot|Dev");
    }
 
 

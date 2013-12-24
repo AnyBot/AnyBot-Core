@@ -124,4 +124,10 @@ public class Regex {
    }
 
 
+   public static String quote(String str)
+   {
+      return Pattern.quote(str);
+   }
+
+
 }

@@ -21,7 +21,8 @@ abstract public class CommandLineListener implements EventListener {
 
    public boolean isResponsible(String message)
    {
-      return Regex.isRegexTrue(message, this.regex);
+      boolean b = Regex.isRegexTrue(message, this.regex);
+      return b;
    }
 
    abstract public void handleCommand(CommandLineEvent e);

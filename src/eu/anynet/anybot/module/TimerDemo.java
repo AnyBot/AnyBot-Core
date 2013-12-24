@@ -6,6 +6,9 @@ package eu.anynet.anybot.module;
 
 import eu.anynet.anybot.bot.ChatMessage;
 import eu.anynet.anybot.bot.Module;
+import eu.anynet.java.util.CommandLineEvent;
+import eu.anynet.java.util.CommandLineListener;
+import eu.anynet.java.util.CommandLineParser;
 import eu.anynet.java.util.TimerTask;
 import java.util.ArrayList;
 
@@ -18,7 +21,8 @@ public class TimerDemo extends Module {
    private TimerTask tsk;
    private ArrayList<String> enabledchannels;
 
-   public TimerDemo() {
+   public TimerDemo()
+   {
       final TimerDemo me = this;
       this.enabledchannels = new ArrayList<>();
 
@@ -42,46 +46,59 @@ public class TimerDemo extends Module {
    }
 
    @Override
-   public void onMessage(ChatMessage msg)
+   public void onMessage(final ChatMessage msg)
    {
-      if(!msg.get(0).equalsIgnoreCase("timer"))
-      {
-         return;
-      }
+      CommandLineParser parser = new CommandLineParser();
+      final TimerDemo me = this;
 
-      if(msg.get(1).equalsIgnoreCase("enable"))
-      {
-         if(!this.enabledchannels.contains(msg.getChannel()))
-         {
-            msg.respond("Enable timer for "+msg.getChannel());
-            this.enabledchannels.add(msg.getChannel());
+      parser.addCommandLineListener(new CommandLineListener(this.buildRegex("timer\\s+enable")) {
+         @Override
+         public void handleCommand(CommandLineEvent e) {
+            if(!me.enabledchannels.contains(msg.getChannel()))
+            {
+               msg.respond("Enable timer for "+msg.getChannel());
+               me.enabledchannels.add(msg.getChannel());
+            }
          }
-      }
-      else if(msg.get(1).equalsIgnoreCase("disable"))
-      {
-         if(this.enabledchannels.contains(msg.getChannel()))
-         {
-            msg.respond("Disable timer for "+msg.getChannel());
-            this.enabledchannels.remove(msg.getChannel());
+      });
+
+      parser.addCommandLineListener(new CommandLineListener(this.buildRegex("timer\\s+disable")) {
+         @Override
+         public void handleCommand(CommandLineEvent e) {
+            if(me.enabledchannels.contains(msg.getChannel()))
+            {
+               msg.respond("Disable timer for "+msg.getChannel());
+               me.enabledchannels.remove(msg.getChannel());
+            }
          }
-      }
-      else if(msg.get(1).equalsIgnoreCase("start"))
-      {
-         msg.respond("Start Timer!");
-         try
-         {
-            this.tsk.start();
+      });
+
+      parser.addCommandLineListener(new CommandLineListener(this.buildRegex("timer\\s+start")) {
+         @Override
+         public void handleCommand(CommandLineEvent e) {
+            msg.respond("Start Timer!");
+            try
+            {
+               me.tsk.start();
+            }
+            catch(IllegalStateException ex)
+            {
+               msg.respond(ex.getMessage());
+            }
          }
-         catch(IllegalStateException ex)
-         {
-            msg.respond(ex.getMessage());
+      });
+
+      parser.addCommandLineListener(new CommandLineListener(this.buildRegex("timer\\s+stop")) {
+         @Override
+         public void handleCommand(CommandLineEvent e) {
+            msg.respond("Stop Timer!");
+            me.tsk.stop();
          }
-      }
-      else if(msg.get(1).equalsIgnoreCase("stop"))
-      {
-         msg.respond("Stop Timer!");
-         this.tsk.stop();
-      }
+      });
+
+      String alltext = msg.get();
+      parser.handleCommandLine(alltext);
+
    }
 
 
