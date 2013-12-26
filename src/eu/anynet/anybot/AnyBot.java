@@ -6,16 +6,14 @@ package eu.anynet.anybot;
 
 import eu.anynet.anybot.bot.BotThread;
 import eu.anynet.anybot.bot.ThreadManager;
+import eu.anynet.anybot.wizard.Wizard;
+import eu.anynet.anybot.wizard.WizardQuestion;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
-import eu.anynet.java.util.PackageScanner;
 import eu.anynet.java.util.SaveBoolean;
 import java.io.IOException;
-import java.util.List;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -68,7 +66,7 @@ public class AnyBot {
          }
       });
 
-      System.out.println("Welcome to a demo shell!");
+      System.out.println("Welcome to the anybot shell!");
       Scanner in = new Scanner(System.in);
       while(isRunning.get())
       {
@@ -85,11 +83,52 @@ public class AnyBot {
     */
    public static void main(String[] args)
    {
-      try {
-         AnyBot anybot = new AnyBot();
-         anybot.begin();
+      // Start the bot master thread
+      AnyBot anybot = new AnyBot();
+      anybot.begin();
 
+      // Test stuff... Ignore it...
 
+      /*
+      Wizard wiz = new Wizard();
+      wiz.addQuestion(new WizardQuestion("Hostname (iz-smart.net)", WizardQuestion.REGEX_ANY));
+      wiz.addQuestion(new WizardQuestion("Port (6667)", WizardQuestion.REGEX_INTEGER));
+      wiz.addQuestion(new WizardQuestion("Nickname", WizardQuestion.REGEX_IRCNICK));
+      
+      wiz.startWizard();
+      */
+      
+         /*
+         NetworkSettings ns = new NetworkSettings();
+         ns.setBotIdent("anybot");
+         ns.setBotNickname("AnyBot|dev");
+         ns.setBotRealname("AnyBot <b>Development</b> Instance");
+         ns.setHost("a-cool-irc.net");
+         ns.setPort(1337);
+         ns.setSsl(true);
+         
+         IRCCommand cmd1 = new IRCCommand();
+         cmd1.setType(IRCCommand.CommandType.USER);
+         cmd1.setTarget("NickServ");
+         cmd1.setCommand("IDENTIFY huhu123");
+
+         ns.addAfterConnectCommand(cmd1);
+         
+         try {
+            JAXBContext context = JAXBContext.newInstance(NetworkSettings.class);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+
+            // Write to System.out
+            m.marshal(ns, System.out);
+         
+         } 
+         catch(JAXBException ex)
+         {
+            ex.printStackTrace();
+         }
+         */
+         
          /*
     private Plugin createPluginInstance(boolean override) throws Exception {
         String pluginname = this.configPluginlist.get(this.pluginList.getSelectedIndex()).get(0);
@@ -105,16 +144,13 @@ public class AnyBot {
         }
     }
          */
-
+/*
          List<String> classes = PackageScanner.listClassesInPackage("eu.anynet.anybot.bot");
          for(String cl : classes)
          {
             System.out.println(cl);
          }
-
-      } catch (ClassNotFoundException | IOException ex) {
-         Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
-      }
+*/
 
    }
 

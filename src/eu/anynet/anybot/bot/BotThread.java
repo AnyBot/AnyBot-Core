@@ -11,7 +11,6 @@ import eu.anynet.java.util.CommandLineParser;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.ArrayList;
-import org.apache.commons.lang3.StringUtils;
 import org.jibble.pircbot.IrcException;
 
 /**
@@ -52,8 +51,10 @@ public class BotThread extends Thread {
          String host = this.getName();
          this.bot = new Bot();
 
+         // TODO: Use reflection to add modules by xml dynamicly
          this.bot.addModule(new TimerDemo());
 
+         // TODO: Put this in a module class
          this.bot.addModule(new Module() {
             @Override
             public void onConnect(ChatEvent ev) {
@@ -89,13 +90,6 @@ public class BotThread extends Thread {
                if(msg.getRecipient().equals(msg.getBot().getNick()) && joinedchannels.contains(msg.getChannel()))
                {
                   joinedchannels.remove(msg.getChannel());
-               }
-            }
-            @Override
-            public void onMessage(ChatMessage msg) {
-               if(msg.get(0).equalsIgnoreCase("channels"))
-               {
-                  msg.respond(StringUtils.join(joinedchannels, ", "));
                }
             }
          });

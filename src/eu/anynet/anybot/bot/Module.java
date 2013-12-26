@@ -37,6 +37,10 @@ public abstract class Module
 
    public void setBot(final Bot b)
    {
+      if(this.bot!=null)
+      {
+         throw new IllegalArgumentException("Bot object already set");
+      }
       this.bot = b;
    }
 

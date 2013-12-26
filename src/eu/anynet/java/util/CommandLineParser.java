@@ -27,23 +27,27 @@ public class CommandLineParser {
       this.handleCommandLine(new CommandLineEvent(line));
    }
 
-   public void handleCommandLine(CommandLineEvent e)
+   public boolean handleCommandLine(CommandLineEvent e)
    {
       ArrayList<CommandLineListener> locallist;
       synchronized (this) {
          if (this.commandLineListenerList.isEmpty())
          {
-            return;
+            return false;
          }
          locallist = (ArrayList<CommandLineListener>) this.commandLineListenerList.clone();
       }
 
+      int i=0;
       for (CommandLineListener listener : locallist) {
          if(listener.isResponsible(e.get()))
          {
+            i++;
             listener.handleCommand(e);
          }
       }
+      
+      return (i>0);
    }
 
 
