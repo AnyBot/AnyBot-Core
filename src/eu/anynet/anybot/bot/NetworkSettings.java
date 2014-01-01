@@ -17,32 +17,32 @@ import javax.xml.bind.annotation.XmlType;
  * @author sim
  */
 @XmlRootElement(namespace = "eu.anynet.anybot.bot")
-public class NetworkSettings 
+public class NetworkSettings
 {
-   
+
    private String host;
    private int port;
    private boolean ssl;
-   
+
    private String botNickname;
    private String botIdent;
    private String botRealname;
-   
+
    @XmlElementWrapper(name = "afterConnectCommands")
    @XmlElement(name = "IRCCommand")
    private final ArrayList<IRCCommand> afterConnectCommands;
-   
+
    @XmlElementWrapper(name = "beforeDisconnectCommands")
    @XmlElement(name = "IRCCommand")
    private final ArrayList<IRCCommand> beforeDisconnectCommands;
 
-   
+
    public NetworkSettings()
    {
       this.afterConnectCommands = new ArrayList<>();
       this.beforeDisconnectCommands = new ArrayList<>();
    }
-   
+
    public String getHost() {
       return host;
    }
@@ -90,15 +90,15 @@ public class NetworkSettings
    public void setBotRealname(String botRealname) {
       this.botRealname = botRealname;
    }
-   
+
    public void addAfterConnectCommand(IRCCommand cmd)
    {
       this.afterConnectCommands.add(cmd);
    }
-   
+
    public void addBeforeDisconnectCommand(IRCCommand cmd)
    {
       this.beforeDisconnectCommands.add(cmd);
    }
-   
+
 }

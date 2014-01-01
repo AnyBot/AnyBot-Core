@@ -5,6 +5,8 @@
 package eu.anynet.anybot;
 
 import eu.anynet.anybot.bot.BotThread;
+import eu.anynet.anybot.bot.IRCCommand;
+import eu.anynet.anybot.bot.NetworkSettings;
 import eu.anynet.anybot.bot.ThreadManager;
 import eu.anynet.anybot.wizard.Wizard;
 import eu.anynet.anybot.wizard.WizardQuestion;
@@ -14,6 +16,9 @@ import eu.anynet.java.util.CommandLineParser;
 import eu.anynet.java.util.SaveBoolean;
 import java.io.IOException;
 import java.util.Scanner;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBException;
+import javax.xml.bind.Marshaller;
 
 /**
  *
@@ -84,8 +89,8 @@ public class AnyBot {
    public static void main(String[] args)
    {
       // Start the bot master thread
-      AnyBot anybot = new AnyBot();
-      anybot.begin();
+      //AnyBot anybot = new AnyBot();
+      //anybot.begin();
 
       // Test stuff... Ignore it...
 
@@ -94,11 +99,13 @@ public class AnyBot {
       wiz.addQuestion(new WizardQuestion("Hostname (iz-smart.net)", WizardQuestion.REGEX_ANY));
       wiz.addQuestion(new WizardQuestion("Port (6667)", WizardQuestion.REGEX_INTEGER));
       wiz.addQuestion(new WizardQuestion("Nickname", WizardQuestion.REGEX_IRCNICK));
-      
+
       wiz.startWizard();
       */
-      
-         /*
+
+      System.out.println(System.getProperty("user.home"));
+
+         //*
          NetworkSettings ns = new NetworkSettings();
          ns.setBotIdent("anybot");
          ns.setBotNickname("AnyBot|dev");
@@ -106,14 +113,14 @@ public class AnyBot {
          ns.setHost("a-cool-irc.net");
          ns.setPort(1337);
          ns.setSsl(true);
-         
+
          IRCCommand cmd1 = new IRCCommand();
          cmd1.setType(IRCCommand.CommandType.USER);
          cmd1.setTarget("NickServ");
          cmd1.setCommand("IDENTIFY huhu123");
 
          ns.addAfterConnectCommand(cmd1);
-         
+
          try {
             JAXBContext context = JAXBContext.newInstance(NetworkSettings.class);
             Marshaller m = context.createMarshaller();
@@ -121,14 +128,14 @@ public class AnyBot {
 
             // Write to System.out
             m.marshal(ns, System.out);
-         
-         } 
+
+         }
          catch(JAXBException ex)
          {
             ex.printStackTrace();
          }
-         */
-         
+         //*/
+
          /*
     private Plugin createPluginInstance(boolean override) throws Exception {
         String pluginname = this.configPluginlist.get(this.pluginList.getSelectedIndex()).get(0);
