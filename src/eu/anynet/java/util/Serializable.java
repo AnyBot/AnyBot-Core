@@ -42,6 +42,7 @@ abstract public class Serializable
       }
 
       // Create marshaller
+      // @see http://www.mkyong.com/java/jaxb-hello-world-example/
       JAXBContext context = JAXBContext.newInstance(this.getClass());
       Marshaller m = context.createMarshaller();
       m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
@@ -49,6 +50,12 @@ abstract public class Serializable
       // Write to System.out
       m.marshal(this, this.serializerfile);
 
+   }
+
+   public static Object unserialize(File file)
+   {
+      AXBContext jaxbContext = JAXBContext.newInstance(Customer.class);
+		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
    }
 
 
