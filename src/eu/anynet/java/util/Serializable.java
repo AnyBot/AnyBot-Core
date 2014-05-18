@@ -41,7 +41,15 @@ public abstract class Serializable<T extends Serializable>
       newserializer.setSerializerFile(serializerfile);
       return newserializer;
    }
+   
+   public String getSerializerFileName()
+   {
+      return null;
+   }
 
-   abstract public String getSerializerPraefix();
+   public String getSerializerPraefix()
+   {
+      return null;
+   }
    
 }

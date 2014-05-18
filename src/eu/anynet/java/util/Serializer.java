@@ -74,6 +74,20 @@ public class Serializer<T extends Serializable>
    
    
    /**
+    * Check for serialize file
+    * @return ok or not
+    */
+   public boolean isReadyForUnserialize()
+   {
+      if(this.serializerfile!=null && this.serializerfile.exists())
+      {
+         return true;
+      }
+      return false;
+   }
+   
+   
+   /**
     * Override the default serialize file
     * @param serializerfile the xml file
     */
@@ -100,10 +114,34 @@ public class Serializer<T extends Serializable>
     * @throws JAXBException
     * @throws IOException 
     */
-   public void serialize(T obj) throws JAXBException, IOException
+   public void serialize(T obj) throws JAXBException, IOException, IllegalArgumentException
    {
-      this.serializerfile = new File(this.serializerfiletpl.replace("{name}", this.normalizeName(obj.getSerializerPraefix())));
+      String fullname = obj.getSerializerFileName();
+      String namepraefix = obj.getSerializerPraefix();
       
+      // Build filename
+      if(fullname!=null)
+      {
+         if(fullname.contains(File.separator))
+         {
+            this.serializerfile = new File(fullname);
+         }
+         else
+         {
+            String tmp = new File(this.serializerfiletpl).getParentFile().getAbsolutePath();
+            this.serializerfile = new File(tmp+File.separator+fullname);
+         }
+      }
+      else if(namepraefix!=null)
+      {
+         this.serializerfile = new File(this.serializerfiletpl.replace("{name}", this.normalizeName(namepraefix)));
+      }
+      else
+      {
+         throw new IllegalArgumentException("No serializer name/praefix defined");
+      }
+      
+      // Create target folder
       if(!this.serializerfile.getParentFile().exists())
       {
          if(!this.serializerfile.getParentFile().mkdirs())
@@ -117,7 +155,7 @@ public class Serializer<T extends Serializable>
       JAXBContext context = JAXBContext.newInstance(obj.getClass());
       Marshaller m = context.createMarshaller();
       m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
+      
       // Write
       m.marshal(obj, this.serializerfile);
    }
@@ -126,13 +164,19 @@ public class Serializer<T extends Serializable>
    /**
     * Unserialize!
     * @return The object
-    * @throws JAXBException 
     */
-   public T unserialize() throws JAXBException
+   public T unserialize()
    {
-      JAXBContext jaxbContext = JAXBContext.newInstance(this.classtype);
-      Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-      return (T)jaxbUnmarshaller.unmarshal(this.serializerfile);
+      try 
+      {
+         JAXBContext jaxbContext = JAXBContext.newInstance(this.classtype);
+         Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
+         return (T)jaxbUnmarshaller.unmarshal(this.serializerfile);
+      } 
+      catch(Exception ex)
+      {
+         return null;
+      }
    }
 
 

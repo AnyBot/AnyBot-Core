@@ -6,6 +6,7 @@
 
 package eu.anynet.anybot.wizard;
 
+import eu.anynet.java.util.Properties;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -28,17 +29,18 @@ public class Wizard
       this.questions.add(q);
    }
    
-   public void startWizard()
+   public Properties startWizard()
    {
+      Properties answers = new Properties();
       int i = 1, j = this.questions.size();
+      
       for(WizardQuestion q : this.questions)
       {
          String answer;
          do 
          {
             // Question
-            System.out.println("("+i+" of "+j+") "+q.getQuestion()+":");
-            System.out.print("> ");
+            System.out.print("("+i+" of "+j+") "+q.getQuestion()+": ");
             
             // Answer
             Scanner s = new Scanner(System.in);
@@ -46,6 +48,11 @@ public class Wizard
             if(q.isTrim())
             {
                answer = answer.trim();
+            }
+            
+            if(answer.isEmpty() && q.getDefaultAnswer()!=null)
+            {
+               answer = q.getDefaultAnswer();
             }
             
             // Check
@@ -56,9 +63,14 @@ public class Wizard
          }
          while(!q.isOk(answer));
          
-         q.setAnswer(answer);
+         answers.set(q.getKey(), answer);
+         
          i++;
       }
+      
+      return answers;
    }
+   
+   
    
 }

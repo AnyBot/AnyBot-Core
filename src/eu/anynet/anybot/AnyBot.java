@@ -5,10 +5,16 @@
 package eu.anynet.anybot;
 
 import eu.anynet.anybot.bot.BotThread;
+import eu.anynet.anybot.bot.NetworkSettings;
+import eu.anynet.anybot.bot.NetworkSettingsStore;
 import eu.anynet.anybot.bot.ThreadManager;
+import eu.anynet.anybot.wizard.Wizard;
+import eu.anynet.anybot.wizard.WizardQuestion;
+import eu.anynet.anybot.wizard.WizardQuestionFlag;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
+import eu.anynet.java.util.Properties;
 import eu.anynet.java.util.SaveBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
@@ -19,15 +25,29 @@ import java.util.Scanner;
  *
  * @author sim
  */
-public class AnyBot {
+public class AnyBot 
+{
+   
+   public static final Properties properties = new Properties();
 
-
+   
    public void begin()
    {
+
+      // Load Network store
+      File networkpoolfile = new File(properties.get("fs.settings")+"networks.xml");
+      Serializer<NetworkSettingsStore> serializer = new NetworkSettingsStore().createSerializer(networkpoolfile);
+      final NetworkSettingsStore networks;
+      if(serializer.isReadyForUnserialize()) {
+         networks = serializer.unserialize();
+      } else {
+         networks = new NetworkSettingsStore();
+      }
+      
+      // Command line parser
       final CommandLineParser parser = new CommandLineParser();
       final ThreadManager pool = new ThreadManager();
       final SaveBoolean isRunning = new SaveBoolean(true);
-
 
       parser.addCommandLineListener(new CommandLineListener("^start") {
          @Override
@@ -65,6 +85,33 @@ public class AnyBot {
             pool.send(e.get(1), e.get(2, -1)+"\n");
          }
       });
+      
+      parser.addCommandLineListener(new CommandLineListener("^change") {
+         @Override
+         public void handleCommand(CommandLineEvent e) 
+         {
+            String netname = e.get(1);
+            NetworkSettings network = new NetworkSettings();
+            if(networks.exists(netname))
+            {
+               network = networks.getNetwork(netname);
+            }
+            
+            Wizard wiz = new Wizard();
+            wiz.addQuestion(new WizardQuestion("host", "Hostname").setDefault(network.getHost()));
+            wiz.addQuestion(new WizardQuestion("port", "Port").setCheck(WizardQuestion.REGEX_INTEGER).setDefault(Integer.toString(network.getPort())));
+            wiz.addQuestion(new WizardQuestionFlag("ssl", "SSL").setDefault(network.isSsl() ? "yes" : "no"));
+            wiz.addQuestion(new WizardQuestion("nick", "Nickname").setCheck(WizardQuestion.REGEX_IRCNICK).setDefault(network.getBotNickname()));
+            wiz.addQuestion(new WizardQuestion("ident", "Ident").setCheck(WizardQuestion.REGEX_IRCNICK).setDefault(network.getBotIdent()));
+            wiz.addQuestion(new WizardQuestion("realname", "Realname").setDefault(network.getBotRealname()));
+            wiz.addQuestion(new WizardQuestionFlag("autostart", "Autostart").setDefault(network.isAutostartEnabled() ? "yes" : "no"));
+            
+            Properties result = wiz.startWizard();
+            
+            
+            
+         }
+      });
 
       System.out.println("Welcome to the anybot shell!");
       Scanner in = new Scanner(System.in);
@@ -83,11 +130,20 @@ public class AnyBot {
     */
    public static void main(String[] args)
    {
-      // Start the bot master thread
+      
+      //--> Properties
+      properties.set("fs.settings", System.getProperty("user.home")+File.separator+".AnyBot"+File.separator);
+      
+      //--> Set serializer default folder
+      Serializer.setDefaultFolder(properties.get("fs.settings"));
+      
+      //--> Start the bot master thread
       AnyBot anybot = new AnyBot();
       anybot.begin();
 
-      // Test stuff... Ignore it...
+      
+      
+      //--> Test stuff... Ignore it...
       
       /*
       Wizard wiz = new Wizard();
@@ -98,35 +154,42 @@ public class AnyBot {
       wiz.startWizard();
       */
       
-      //--> Set serializer default folder
-      Serializer.setDefaultFolder(System.getProperty("user.home")+File.separator+".AnyBot"+File.separator);
-
       /*
-      NetworkSettings ns = new NetworkSettings();
-      ns.setAutostart(true);
-      ns.setBotIdent("anybot");
-      ns.setBotNickname("AnyBot|dev");
-      ns.setBotRealname("AnyBot <b>Development</b> Instance");
-      ns.setHost("a-cool-irc.net");
-      ns.setPort(1337);
-      ns.setSsl(true);
+      NetworkSettings ns_coolirc = new NetworkSettings();
+      ns_coolirc.setAutostart(true);
+      ns_coolirc.setBotIdent("anybot");
+      ns_coolirc.setBotNickname("AnyBot|dev");
+      ns_coolirc.setBotRealname("AnyBot <b>Development</b> Instance");
+      ns_coolirc.setHost("a-cool-irc.net");
+      ns_coolirc.setPort(1337);
+      ns_coolirc.setSsl(true);
 
       IRCCommand cmd1 = new IRCCommand();
       cmd1.setType(IRCCommand.CommandType.USER);
       cmd1.setTarget("NickServ");
       cmd1.setCommand("IDENTIFY huhu123");
 
-      ns.addAfterConnectCommand(cmd1);
+      ns_coolirc.addAfterConnectCommand(cmd1);
+      
+      NetworkSettings ns_izsmart = new NetworkSettings();
+      ns_izsmart.setBotIdent("anybot");
+      ns_izsmart.setBotNickname("AnyBot|izdev");
+      ns_izsmart.setBotRealname("iz-smart development instance");
+      ns_izsmart.setHost("iz-smart.net");
+      ns_izsmart.setPort(6667);
+      
+      ns_izsmart.addBeforeDisconnectCommand(cmd1);
+      
+      NetworkSettingsStore store = new NetworkSettingsStore();
+      store.addNetwork("anynet", ns_coolirc);
+      store.addNetwork("izsmart", ns_izsmart);
       
       try {
-         File nsfile = ns.serialize();
-         
-         NetworkSettings newsettings = new NetworkSettings().createSerializer(nsfile).unserialize();
+         File nsfile = store.serialize();
+         NetworkSettingsStore newsettings = new NetworkSettingsStore().createSerializer(nsfile).unserialize();
          
          //NetworkSettings newsettings = serr.unserialize();
-         System.out.println("Hostname: "+newsettings.getHost());
-         System.out.println("Autostart: "+newsettings.isAutostartEnabled());
-         System.out.println("SSL: "+newsettings.isSsl());
+         System.out.println("Networks: "+StringUtils.join(newsettings.getNetworkKeys().toArray(), ", "));
          
       } catch (JAXBException ex) {
          Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);

@@ -6,10 +6,7 @@
 
 package eu.anynet.anybot.bot;
 
-import eu.anynet.java.util.Serializable;
 import java.util.ArrayList;
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -18,9 +15,8 @@ import javax.xml.bind.annotation.XmlRootElement;
  *
  * @author sim
  */
-@XmlRootElement(namespace = "eu.anynet.anybot.bot")
-@XmlAccessorType(XmlAccessType.FIELD)
-public class NetworkSettings extends Serializable<NetworkSettings>
+@XmlRootElement(name = "NetworkSettings")
+public class NetworkSettings
 {
    
    private boolean autostart;
@@ -43,7 +39,6 @@ public class NetworkSettings extends Serializable<NetworkSettings>
    public NetworkSettings()
    {
       this.autostart = false;
-      this.initSerializer(this, NetworkSettings.class);
       this.afterConnectCommands = new ArrayList<>();
       this.beforeDisconnectCommands = new ArrayList<>();
    }
@@ -115,10 +110,7 @@ public class NetworkSettings extends Serializable<NetworkSettings>
    {
       this.beforeDisconnectCommands.add(cmd);
    }
-
-   @Override
-   public String getSerializerPraefix() {
-      return "networksettings-"+this.getHost();
-   }
+   
+   
 
 }

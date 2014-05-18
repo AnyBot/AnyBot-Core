@@ -23,31 +23,45 @@ public class WizardQuestion
    public static final String REGEX_ALPHANUMERIC = "^[0-9A-Za-z]+$";
    public static final String REGEX_ALPHANUMERIC_SPACES = "^[0-9A-Za-z ]+$";
 
-   private String question;
-   private String checkregex;
-   private boolean caseinsensitive;
-   private boolean trim;
+   protected String key;
+   protected String question;
+   protected String checkregex;
+   protected boolean caseinsensitive;
+   protected boolean trim;
    
-   private String answer;
+   protected String defaultanswer;
    
-   public WizardQuestion(String question, String checkregex, boolean caseinsensitive)
+   public WizardQuestion(String key, String question)
    {
+      this.key = key;
       this.question = question;
-      this.checkregex = checkregex;
-      this.caseinsensitive = caseinsensitive;
+      this.checkregex = ".*";
+      this.caseinsensitive = false;
       this.trim = true;
-      this.answer = null;
+      this.defaultanswer = null;
    }
    
-   public WizardQuestion(String question, String checkregex)
+   
+   
+   public WizardQuestion setCaseInsensitive()
    {
-      this(question, checkregex, true);
+      this.caseinsensitive = true;
+      return this;
    }
    
-   public WizardQuestion(String question)
+   public WizardQuestion setCheck(String checkregex)
    {
-      this(question, WizardQuestion.REGEX_ANYOREMPTY);
+      this.checkregex = checkregex;
+      return this;
    }
+   
+   public WizardQuestion setDefault(String defaultanswer)
+   {
+      this.defaultanswer = defaultanswer;
+      return this;
+   }
+   
+   
    
    public boolean isOk(String str)
    {
@@ -58,7 +72,12 @@ public class WizardQuestion
    }
 
    public String getQuestion() {
-      return question;
+      String temp = this.question;
+      if(this.defaultanswer!=null)
+      {
+         temp = temp+" ["+this.defaultanswer+"]";
+      }
+      return temp;
    }
 
    public String getCheckregex() {
@@ -72,18 +91,15 @@ public class WizardQuestion
    public boolean isTrim() {
       return trim;
    }
-
-   public String getAnswer() {
-      return answer;
-   }
-
-   public void setAnswer(String answer) {
-      this.answer = answer;
+   
+   public String getKey()
+   {
+      return this.key;
    }
    
-   public boolean isAnswered()
+   public String getDefaultAnswer()
    {
-      return (this.answer!=null);
+      return this.defaultanswer;
    }
    
    
