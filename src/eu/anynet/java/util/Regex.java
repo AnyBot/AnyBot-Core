@@ -128,6 +128,13 @@ public class Regex {
    {
       return Pattern.quote(str);
    }
+   
+   
+   public static String replace(String rgx, String str, String replacement)
+   {
+      Pattern pattern = Pattern.compile(rgx);
+      return pattern.matcher(str).replaceAll(replacement);
+   }
 
 
 }

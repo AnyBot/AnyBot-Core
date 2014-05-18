@@ -5,20 +5,15 @@
 package eu.anynet.anybot;
 
 import eu.anynet.anybot.bot.BotThread;
-import eu.anynet.anybot.bot.IRCCommand;
-import eu.anynet.anybot.bot.NetworkSettings;
 import eu.anynet.anybot.bot.ThreadManager;
-import eu.anynet.anybot.wizard.Wizard;
-import eu.anynet.anybot.wizard.WizardQuestion;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
 import eu.anynet.java.util.SaveBoolean;
+import eu.anynet.java.util.Serializer;
+import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
 
 /**
  *
@@ -89,11 +84,11 @@ public class AnyBot {
    public static void main(String[] args)
    {
       // Start the bot master thread
-      //AnyBot anybot = new AnyBot();
-      //anybot.begin();
+      AnyBot anybot = new AnyBot();
+      anybot.begin();
 
       // Test stuff... Ignore it...
-
+      
       /*
       Wizard wiz = new Wizard();
       wiz.addQuestion(new WizardQuestion("Hostname (iz-smart.net)", WizardQuestion.REGEX_ANY));
@@ -102,62 +97,82 @@ public class AnyBot {
 
       wiz.startWizard();
       */
+      
+      //--> Set serializer default folder
+      Serializer.setDefaultFolder(System.getProperty("user.home")+File.separator+".AnyBot"+File.separator);
 
-      System.out.println(System.getProperty("user.home"));
+      /*
+      NetworkSettings ns = new NetworkSettings();
+      ns.setAutostart(true);
+      ns.setBotIdent("anybot");
+      ns.setBotNickname("AnyBot|dev");
+      ns.setBotRealname("AnyBot <b>Development</b> Instance");
+      ns.setHost("a-cool-irc.net");
+      ns.setPort(1337);
+      ns.setSsl(true);
 
-         //*
-         NetworkSettings ns = new NetworkSettings();
-         ns.setBotIdent("anybot");
-         ns.setBotNickname("AnyBot|dev");
-         ns.setBotRealname("AnyBot <b>Development</b> Instance");
-         ns.setHost("a-cool-irc.net");
-         ns.setPort(1337);
-         ns.setSsl(true);
+      IRCCommand cmd1 = new IRCCommand();
+      cmd1.setType(IRCCommand.CommandType.USER);
+      cmd1.setTarget("NickServ");
+      cmd1.setCommand("IDENTIFY huhu123");
 
-         IRCCommand cmd1 = new IRCCommand();
-         cmd1.setType(IRCCommand.CommandType.USER);
-         cmd1.setTarget("NickServ");
-         cmd1.setCommand("IDENTIFY huhu123");
+      ns.addAfterConnectCommand(cmd1);
+      
+      try {
+         File nsfile = ns.serialize();
+         
+         NetworkSettings newsettings = new NetworkSettings().createSerializer(nsfile).unserialize();
+         
+         //NetworkSettings newsettings = serr.unserialize();
+         System.out.println("Hostname: "+newsettings.getHost());
+         System.out.println("Autostart: "+newsettings.isAutostartEnabled());
+         System.out.println("SSL: "+newsettings.isSsl());
+         
+      } catch (JAXBException ex) {
+         Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (IOException ex) {
+         Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
+      }
+      */
+      
+      /*
+      try {
+      JAXBContext context = JAXBContext.newInstance(NetworkSettings.class);
+      Marshaller m = context.createMarshaller();
+      m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
 
-         ns.addAfterConnectCommand(cmd1);
+      // Write to System.out
+      m.marshal(ns, System.out);
 
-         try {
-            JAXBContext context = JAXBContext.newInstance(NetworkSettings.class);
-            Marshaller m = context.createMarshaller();
-            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      }
+      catch(JAXBException ex)
+      {
+      ex.printStackTrace();
+      }
+      */
 
-            // Write to System.out
-            m.marshal(ns, System.out);
+      /*
+      private Plugin createPluginInstance(boolean override) throws Exception {
+      String pluginname = this.configPluginlist.get(this.pluginList.getSelectedIndex()).get(0);
 
-         }
-         catch(JAXBException ex)
-         {
-            ex.printStackTrace();
-         }
-         //*/
-
-         /*
-    private Plugin createPluginInstance(boolean override) throws Exception {
-        String pluginname = this.configPluginlist.get(this.pluginList.getSelectedIndex()).get(0);
-
-        if(!this.pluginInstances.containsKey(pluginname) || override) {
-            Class myPlugin = Class.forName("comicdownloader.plugins."+pluginname);
-            Object o = myPlugin.getConstructor().newInstance();
-            myPlugin.getMethod("setGui", new Class[]{GUI.class}).invoke(o, this);
-            this.pluginInstances.put(pluginname, (Plugin)o);
-            return (Plugin)o;
-        } else {
-            return this.pluginInstances.get(pluginname);
-        }
-    }
-         */
-/*
-         List<String> classes = PackageScanner.listClassesInPackage("eu.anynet.anybot.bot");
-         for(String cl : classes)
-         {
-            System.out.println(cl);
-         }
-*/
+      if(!this.pluginInstances.containsKey(pluginname) || override) {
+      Class myPlugin = Class.forName("comicdownloader.plugins."+pluginname);
+      Object o = myPlugin.getConstructor().newInstance();
+      myPlugin.getMethod("setGui", new Class[]{GUI.class}).invoke(o, this);
+      this.pluginInstances.put(pluginname, (Plugin)o);
+      return (Plugin)o;
+      } else {
+      return this.pluginInstances.get(pluginname);
+      }
+      }
+      */
+      /*
+      List<String> classes = PackageScanner.listClassesInPackage("eu.anynet.anybot.bot");
+      for(String cl : classes)
+      {
+      System.out.println(cl);
+      }
+      */
 
    }
 

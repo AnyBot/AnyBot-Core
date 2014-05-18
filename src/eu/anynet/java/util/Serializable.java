@@ -1,63 +1,47 @@
 /*
- * To change this template, choose Tools | Templates
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+
 package eu.anynet.java.util;
 
 import java.io.File;
-import javax.xml.bind.JAXBContext;
+import java.io.IOException;
 import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
 
 /**
  *
- * @author sim
+ * @author perry
+ * @param <T> the classtype
  */
-abstract public class Serializable
+public abstract class Serializable<T extends Serializable> 
 {
-
-   private File serializerfile = null;
-
-
-   public void setSerializerFile(File f)
+   
+   private Serializer<T> serializer;
+   private T obj;
+   private Class<T> classtype;
+   
+   protected void initSerializer(T obj, Class<T> classtype)
    {
-      this.serializerfile = f;
+      this.obj = obj;
+      this.classtype = classtype;
+      this.serializer = new Serializer<>(classtype);
+   }
+   
+   public File serialize() throws JAXBException, IOException
+   {
+      this.serializer.serialize(this.obj);
+      return this.serializer.getSerializerFile();
+   }
+   
+   public Serializer<T> createSerializer(File serializerfile)
+   {
+      Serializer<T> newserializer = new Serializer<>(this.classtype);
+      newserializer.setSerializerFile(serializerfile);
+      return newserializer;
    }
 
-   public File getSerializerFile()
-   {
-      if(this.serializerfile==null)
-      {
-         throw new IllegalArgumentException("File not defined");
-      }
-      return this.serializerfile;
-   }
-
-   public void serialize() throws JAXBException
-   {
-      if(this.serializerfile==null)
-      {
-         throw new IllegalArgumentException("File not defined");
-      }
-
-      // Create marshaller
-      // @see http://www.mkyong.com/java/jaxb-hello-world-example/
-      JAXBContext context = JAXBContext.newInstance(this.getClass());
-      Marshaller m = context.createMarshaller();
-      m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
-      // Write to System.out
-      m.marshal(this, this.serializerfile);
-
-   }
-
-   public static Object unserialize(File file)
-   {
-      AXBContext jaxbContext = JAXBContext.newInstance(Customer.class);
-		Unmarshaller jaxbUnmarshaller = jaxbContext.createUnmarshaller();
-   }
-
-
-
+   abstract public String getSerializerPraefix();
+   
 }

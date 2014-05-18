@@ -6,41 +6,56 @@
 
 package eu.anynet.anybot.bot;
 
+import eu.anynet.java.util.Serializable;
 import java.util.ArrayList;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-import javax.xml.bind.annotation.XmlType;
 
 /**
  *
  * @author sim
  */
 @XmlRootElement(namespace = "eu.anynet.anybot.bot")
-public class NetworkSettings
+@XmlAccessorType(XmlAccessType.FIELD)
+public class NetworkSettings extends Serializable<NetworkSettings>
 {
-
+   
+   private boolean autostart;
    private String host;
    private int port;
    private boolean ssl;
-
    private String botNickname;
    private String botIdent;
    private String botRealname;
 
-   @XmlElementWrapper(name = "afterConnectCommands")
+   @XmlElementWrapper(name = "AfterConnectCommands")
    @XmlElement(name = "IRCCommand")
    private final ArrayList<IRCCommand> afterConnectCommands;
 
-   @XmlElementWrapper(name = "beforeDisconnectCommands")
+   @XmlElementWrapper(name = "BeforeDisconnectCommands")
    @XmlElement(name = "IRCCommand")
    private final ArrayList<IRCCommand> beforeDisconnectCommands;
 
 
    public NetworkSettings()
    {
+      this.autostart = false;
+      this.initSerializer(this, NetworkSettings.class);
       this.afterConnectCommands = new ArrayList<>();
       this.beforeDisconnectCommands = new ArrayList<>();
+   }
+   
+   public void setAutostart(boolean b)
+   {
+      this.autostart = b;
+   }
+   
+   public boolean isAutostartEnabled()
+   {
+      return this.autostart;
    }
 
    public String getHost() {
@@ -99,6 +114,11 @@ public class NetworkSettings
    public void addBeforeDisconnectCommand(IRCCommand cmd)
    {
       this.beforeDisconnectCommands.add(cmd);
+   }
+
+   @Override
+   public String getSerializerPraefix() {
+      return "networksettings-"+this.getHost();
    }
 
 }
