@@ -6,19 +6,27 @@
 
 package eu.anynet.anybot.bot;
 
+import java.io.IOException;
+import java.io.InterruptedIOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 /**
  *
  * @author sim
  */
 @XmlRootElement(name = "NetworkSettings")
-public class NetworkSettings
+@XmlAccessorType(XmlAccessType.FIELD)
+public class Network
 {
-   
+
    private boolean autostart;
    private String host;
    private int port;
@@ -26,6 +34,12 @@ public class NetworkSettings
    private String botNickname;
    private String botIdent;
    private String botRealname;
+
+   @XmlTransient
+   private BotThread botthread;
+
+   @XmlTransient
+   private Thread output;
 
    @XmlElementWrapper(name = "AfterConnectCommands")
    @XmlElement(name = "IRCCommand")
@@ -36,18 +50,54 @@ public class NetworkSettings
    private final ArrayList<IRCCommand> beforeDisconnectCommands;
 
 
-   public NetworkSettings()
+   public Network()
    {
       this.autostart = false;
       this.afterConnectCommands = new ArrayList<>();
       this.beforeDisconnectCommands = new ArrayList<>();
+      this.botthread = null;
+      this.output = null;
    }
-   
+
+   public BotThread getBotThread() throws IOException
+   {
+      if(this.botthread==null || this.botthread.isInterrupted())
+      {
+         this.botthread = new BotThread(this);
+         final Network net = this;
+
+         if(this.output!=null && (this.output.isAlive() || !this.output.isInterrupted()))
+         {
+            this.output.interrupt();
+            this.output = null;
+         }
+
+         this.output = new Thread() {
+            @Override
+            public void run()
+            {
+               while(true)
+               {
+                  try {
+                     String msg = net.botthread.getPipeEndpoint().receive();
+                     System.out.println("["+net.getHost()+"] "+msg);
+                  } catch (IOException ex) {
+                     Logger.getLogger(Network.class.getName()).log(Level.SEVERE, null, ex);
+                  }
+               }
+            }
+         };
+
+         this.output.start();
+      }
+      return this.botthread;
+   }
+
    public void setAutostart(boolean b)
    {
       this.autostart = b;
    }
-   
+
    public boolean isAutostartEnabled()
    {
       return this.autostart;
@@ -110,7 +160,7 @@ public class NetworkSettings
    {
       this.beforeDisconnectCommands.add(cmd);
    }
-   
-   
+
+
 
 }

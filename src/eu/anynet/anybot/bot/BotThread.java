@@ -11,6 +11,8 @@ import eu.anynet.java.util.CommandLineParser;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.jibble.pircbot.IrcException;
 
 /**
@@ -22,11 +24,13 @@ public class BotThread extends Thread {
    private Bot bot;
    private final ThreadPipes pipes;
    private final ArrayList<String> joinedchannels;
+   private final Network network;
 
-   public BotThread() throws IOException
+   public BotThread(Network network) throws IOException
    {
       this.pipes = new ThreadPipes();
       this.joinedchannels = new ArrayList<>();
+      this.network = network;
    }
 
    public ThreadPipeEndpoint getPipeEndpoint()
@@ -39,29 +43,34 @@ public class BotThread extends Thread {
       return this.pipes.getInsideEndpoint().receive();
    }
 
-   private void writePipeLine(String message) throws IOException
+   private void writePipeLine(String message)
    {
-      this.pipes.getInsideEndpoint().send(message);
+      try {
+         this.pipes.getInsideEndpoint().send(message);
+      } catch (IOException ex) {
+         Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
+      }
    }
 
    @Override
    public void run()
    {
       try {
-         String host = this.getName();
+         //String host = this.getName();
+         final BotThread me = this;
          this.bot = new Bot();
 
          // TODO: Use reflection to add modules by xml dynamicly
-         this.bot.addModule(new TimerDemo());
+         // this.bot.addModule(new TimerDemo());
 
          // TODO: Put this in a module class
          this.bot.addModule(new Module() {
             @Override
             public void onConnect(ChatEvent ev) {
-               System.out.println("["+ev.getBot().getServer()+"] Connected!");
+               me.writePipeLine("[pipe] Connected!");
                for(String channel : joinedchannels)
                {
-                  System.out.println("["+ev.getBot().getServer()+"] Join "+channel);
+                  me.writePipeLine("Join "+channel);
                   ev.getBot().joinChannel(channel);
                }
             }
@@ -92,10 +101,14 @@ public class BotThread extends Thread {
                   joinedchannels.remove(msg.getChannel());
                }
             }
+            @Override
+            public void onMessage(ChatMessage msg) {
+               me.writePipeLine("[MESSAGE] "+msg.getNick()+" --> "+(msg.getRecipient()!=null ? msg.getRecipient() : msg.getChannel())+": "+msg.getMessage()+"\n");
+            }
          });
 
          this.bot.enableAutoReconnect();
-         this.bot.connect(host);
+         this.bot.connect(network.getHost());
 
          CommandLineParser parser = new CommandLineParser();
 
@@ -123,6 +136,13 @@ public class BotThread extends Thread {
             }
          });
 
+         parser.addCommandLineListener(new CommandLineListener("^msg") {
+            @Override
+            public void handleCommand(CommandLineEvent e) {
+               bot.sendMessage(e.get(1), e.get(2, -1, " "));
+            }
+         });
+
          while(true)
          {
             parser.handleCommandLine(this.readPipeLine());
@@ -131,13 +151,13 @@ public class BotThread extends Thread {
       }
       catch(InterruptedIOException ex)
       {
-         System.out.println("["+this.bot.getServer()+"] Thread exited.");
+         this.writePipeLine("Thread exited.");
          this.bot.disconnect();
          this.bot.dispose();
       }
       catch (IOException | IrcException ex)
       {
-         System.out.println("["+this.bot.getServer()+"] Error: "+ex.getMessage());
+         this.writePipeLine("Error: "+ex.getMessage());
       }
    }
 

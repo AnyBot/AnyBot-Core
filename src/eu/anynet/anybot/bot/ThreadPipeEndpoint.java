@@ -27,7 +27,7 @@ public class ThreadPipeEndpoint {
    public void send(String text) throws IOException
    {
       this.writer.write(text);
-      this.writer.flush();
+      //this.writer.flush();
    }
 
    public String receive() throws IOException, InterruptedIOException

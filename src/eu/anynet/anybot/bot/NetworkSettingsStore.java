@@ -21,22 +21,22 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @XmlRootElement(name = "NetworkSettingsStore")
 @XmlAccessorType(XmlAccessType.FIELD)
-public class NetworkSettingsStore extends Serializable<NetworkSettingsStore> 
+public class NetworkSettingsStore extends Serializable<NetworkSettingsStore>
 {
-   
+
    @XmlElementWrapper(name = "Networks")
    @XmlElement(name = "NetworkSettings")
-   private HashMap<String, NetworkSettings> networks;
-   
-   
+   private HashMap<String, Network> networks;
+
+
    public NetworkSettingsStore()
    {
       this.initSerializer(this, NetworkSettingsStore.class);
       this.networks = new HashMap<>();
    }
-   
-   
-   public void addNetwork(String key, NetworkSettings network)
+
+
+   public void addNetwork(String key, Network network)
    {
       if(this.networks.keySet().contains(key))
       {
@@ -44,34 +44,40 @@ public class NetworkSettingsStore extends Serializable<NetworkSettingsStore>
       }
       this.networks.put(key, network);
    }
-   
-   
+
+
+   public void removeNetwork(String key)
+   {
+      this.networks.remove(key);
+   }
+
+
    public boolean exists(String key)
    {
       return this.networks.keySet().contains(key);
    }
-   
-   
-   public NetworkSettings getNetwork(String key)
+
+
+   public Network getNetwork(String key)
    {
       return this.networks.get(key);
    }
-   
-   
+
+
    public ArrayList<String> getNetworkKeys()
    {
       ArrayList<String> newlist = new ArrayList<>();
       newlist.addAll(this.networks.keySet());
       return newlist;
    }
-   
+
 
    @Override
    public String getSerializerFileName()
    {
       return "networks.xml";
    }
-   
-   
-   
+
+
+
 }

@@ -5,7 +5,7 @@
 package eu.anynet.anybot;
 
 import eu.anynet.anybot.bot.BotThread;
-import eu.anynet.anybot.bot.NetworkSettings;
+import eu.anynet.anybot.bot.Network;
 import eu.anynet.anybot.bot.NetworkSettingsStore;
 import eu.anynet.anybot.bot.ThreadManager;
 import eu.anynet.anybot.wizard.Wizard;
@@ -20,17 +20,20 @@ import eu.anynet.java.util.Serializer;
 import java.io.File;
 import java.io.IOException;
 import java.util.Scanner;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.xml.bind.JAXBException;
 
 /**
  *
  * @author sim
  */
-public class AnyBot 
+public class AnyBot
 {
-   
+
    public static final Properties properties = new Properties();
 
-   
+
    public void begin()
    {
 
@@ -43,7 +46,7 @@ public class AnyBot
       } else {
          networks = new NetworkSettingsStore();
       }
-      
+
       // Command line parser
       final CommandLineParser parser = new CommandLineParser();
       final ThreadManager pool = new ThreadManager();
@@ -54,10 +57,15 @@ public class AnyBot
          public void handleCommand(CommandLineEvent e) {
             String host = e.get(1);
             try {
-               BotThread newthread = new BotThread();
-               newthread.setName(host);
-               pool.add(newthread);
-               pool.start(host);
+               if(networks.getNetworkKeys().contains(host))
+               {
+                  Network network = networks.getNetwork(host);
+                  network.getBotThread().start();
+               }
+               else
+               {
+                  System.out.println("["+host+"] Network definition not found.");
+               }
             } catch(IOException ex) {
                System.out.println("["+host+"] Could not start: "+ex.getMessage());
             }
@@ -67,14 +75,30 @@ public class AnyBot
       parser.addCommandLineListener(new CommandLineListener("^stop") {
          @Override
          public void handleCommand(CommandLineEvent e) {
-            pool.kill(e.get(1));
+            try {
+               networks.getNetwork(e.get(1)).getBotThread().interrupt();
+            } catch (IOException ex) {
+               Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
+            }
          }
       });
 
       parser.addCommandLineListener(new CommandLineListener("^exit") {
          @Override
-         public void handleCommand(CommandLineEvent e) {
-            pool.killAll();
+         public void handleCommand(CommandLineEvent e)
+         {
+            for(String netname : networks.getNetworkKeys())
+            {
+               try {
+                  BotThread thr = networks.getNetwork(netname).getBotThread();
+                  if(thr.isAlive())
+                  {
+                     thr.interrupt();
+                  }
+               } catch (IOException ex) {
+                  System.out.println("["+netname+"] Could not interrupt: "+ex.getMessage());
+               }
+            }
             isRunning.setFalse();
          }
       });
@@ -82,21 +106,34 @@ public class AnyBot
       parser.addCommandLineListener(new CommandLineListener("^send") {
          @Override
          public void handleCommand(CommandLineEvent e) {
-            pool.send(e.get(1), e.get(2, -1)+"\n");
+            try {
+               networks.getNetwork(e.get(1)).getBotThread().getPipeEndpoint().send(e.get(2, -1)+"\n");
+            } catch (IOException ex) {
+               Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
+            }
          }
       });
-      
+
       parser.addCommandLineListener(new CommandLineListener("^change") {
          @Override
-         public void handleCommand(CommandLineEvent e) 
+         public void handleCommand(CommandLineEvent e)
          {
+            if(e.count()<2)
+            {
+               return;
+            }
+
+            // Get or create network object
+            boolean newnet = true;
             String netname = e.get(1);
-            NetworkSettings network = new NetworkSettings();
+            Network network = new Network();
             if(networks.exists(netname))
             {
+               newnet=false;
                network = networks.getNetwork(netname);
             }
-            
+
+            // Run wizard
             Wizard wiz = new Wizard();
             wiz.addQuestion(new WizardQuestion("host", "Hostname").setDefault(network.getHost()));
             wiz.addQuestion(new WizardQuestion("port", "Port").setCheck(WizardQuestion.REGEX_INTEGER).setDefault(Integer.toString(network.getPort())));
@@ -105,11 +142,46 @@ public class AnyBot
             wiz.addQuestion(new WizardQuestion("ident", "Ident").setCheck(WizardQuestion.REGEX_IRCNICK).setDefault(network.getBotIdent()));
             wiz.addQuestion(new WizardQuestion("realname", "Realname").setDefault(network.getBotRealname()));
             wiz.addQuestion(new WizardQuestionFlag("autostart", "Autostart").setDefault(network.isAutostartEnabled() ? "yes" : "no"));
-            
             Properties result = wiz.startWizard();
-            
-            
-            
+
+            network.setAutostart(result.getBoolean("autostart"));
+            network.setHost(result.get("host"));
+            network.setPort(result.getInt("port"));
+            network.setSsl(result.getBoolean("ssl"));
+            network.setBotNickname(result.get("nick"));
+            network.setBotIdent(result.get("ident"));
+            network.setBotRealname(result.get("realname"));
+
+            if(newnet==true)
+            {
+               networks.addNetwork(netname, network);
+            }
+            networks.serialize();
+         }
+      });
+
+      parser.addCommandLineListener(new CommandLineListener("^remove") {
+         @Override
+         public void handleCommand(CommandLineEvent e)
+         {
+            if(e.count()<2)
+            {
+               return;
+            }
+            String netname = e.get(1);
+            networks.removeNetwork(netname);
+            networks.serialize();
+         }
+      });
+
+      parser.addCommandLineListener(new CommandLineListener("^list") {
+         @Override
+         public void handleCommand(CommandLineEvent e)
+         {
+            for(String netname : networks.getNetworkKeys())
+            {
+               System.out.println(netname+" ("+networks.getNetwork(netname).getHost()+")");
+            }
          }
       });
 
@@ -130,21 +202,21 @@ public class AnyBot
     */
    public static void main(String[] args)
    {
-      
+
       //--> Properties
       properties.set("fs.settings", System.getProperty("user.home")+File.separator+".AnyBot"+File.separator);
-      
+
       //--> Set serializer default folder
       Serializer.setDefaultFolder(properties.get("fs.settings"));
-      
+
       //--> Start the bot master thread
       AnyBot anybot = new AnyBot();
       anybot.begin();
 
-      
-      
+
+
       //--> Test stuff... Ignore it...
-      
+
       /*
       Wizard wiz = new Wizard();
       wiz.addQuestion(new WizardQuestion("Hostname (iz-smart.net)", WizardQuestion.REGEX_ANY));
@@ -153,7 +225,7 @@ public class AnyBot
 
       wiz.startWizard();
       */
-      
+
       /*
       NetworkSettings ns_coolirc = new NetworkSettings();
       ns_coolirc.setAutostart(true);
@@ -170,34 +242,34 @@ public class AnyBot
       cmd1.setCommand("IDENTIFY huhu123");
 
       ns_coolirc.addAfterConnectCommand(cmd1);
-      
+
       NetworkSettings ns_izsmart = new NetworkSettings();
       ns_izsmart.setBotIdent("anybot");
       ns_izsmart.setBotNickname("AnyBot|izdev");
       ns_izsmart.setBotRealname("iz-smart development instance");
       ns_izsmart.setHost("iz-smart.net");
       ns_izsmart.setPort(6667);
-      
+
       ns_izsmart.addBeforeDisconnectCommand(cmd1);
-      
+
       NetworkSettingsStore store = new NetworkSettingsStore();
       store.addNetwork("anynet", ns_coolirc);
       store.addNetwork("izsmart", ns_izsmart);
-      
+
       try {
          File nsfile = store.serialize();
          NetworkSettingsStore newsettings = new NetworkSettingsStore().createSerializer(nsfile).unserialize();
-         
+
          //NetworkSettings newsettings = serr.unserialize();
          System.out.println("Networks: "+StringUtils.join(newsettings.getNetworkKeys().toArray(), ", "));
-         
+
       } catch (JAXBException ex) {
          Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
       } catch (IOException ex) {
          Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
       }
       */
-      
+
       /*
       try {
       JAXBContext context = JAXBContext.newInstance(NetworkSettings.class);

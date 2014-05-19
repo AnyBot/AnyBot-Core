@@ -6,6 +6,8 @@
 
 package eu.anynet.anybot.bot;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 /**
@@ -13,13 +15,14 @@ import javax.xml.bind.annotation.XmlRootElement;
  * @author sim
  */
 @XmlRootElement(name = "IRCCommand")
-public class IRCCommand 
+@XmlAccessorType(XmlAccessType.FIELD)
+public class IRCCommand
 {
    public enum CommandType
    {
       CHANNEL, USER, RAW
    }
-   
+
    private CommandType type;
    private String target;
    private String command;
@@ -47,6 +50,6 @@ public class IRCCommand
    public void setCommand(String command) {
       this.command = command;
    }
-   
-   
+
+
 }

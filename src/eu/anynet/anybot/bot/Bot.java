@@ -80,7 +80,7 @@ public class Bot extends PircBot {
    @Override
    public void onConnect()
    {
-      System.out.println("Connected!");
+      //System.out.println("Connected!");
       ArrayList<Module> locallist = this.cloneModuleList();
       for (Module listener : locallist) {
          listener.onConnect(new ChatEvent(this));
@@ -91,7 +91,7 @@ public class Bot extends PircBot {
    public void onDisconnect()
    {
       if (this.isAutoReconnectEnabled()) {
-         System.out.println("Server lost connection, reconnect!");
+         //System.out.println("Server lost connection, reconnect!");
          try {
             while(true)
             {
