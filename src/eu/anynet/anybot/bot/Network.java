@@ -76,14 +76,14 @@ public class Network
             @Override
             public void run()
             {
-               while(true)
-               {
-                  try {
+               try {
+                  while(true)
+                  {
                      String msg = net.botthread.getPipeEndpoint().receive();
                      System.out.println("["+net.getHost()+"] "+msg);
-                  } catch (IOException ex) {
-                     Logger.getLogger(Network.class.getName()).log(Level.SEVERE, null, ex);
                   }
+               } catch (IOException ex) {
+                  Logger.getLogger(Network.class.getName()).log(Level.SEVERE, null, ex);
                }
             }
          };

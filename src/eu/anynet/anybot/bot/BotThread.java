@@ -46,7 +46,7 @@ public class BotThread extends Thread {
    private void writePipeLine(String message)
    {
       try {
-         this.pipes.getInsideEndpoint().send(message);
+         this.pipes.getInsideEndpoint().send(message+"\n");
       } catch (IOException ex) {
          Logger.getLogger(BotThread.class.getName()).log(Level.SEVERE, null, ex);
       }
@@ -67,7 +67,7 @@ public class BotThread extends Thread {
          this.bot.addModule(new Module() {
             @Override
             public void onConnect(ChatEvent ev) {
-               me.writePipeLine("[pipe] Connected!");
+               me.writePipeLine("Connected!");
                for(String channel : joinedchannels)
                {
                   me.writePipeLine("Join "+channel);
@@ -103,7 +103,7 @@ public class BotThread extends Thread {
             }
             @Override
             public void onMessage(ChatMessage msg) {
-               me.writePipeLine("[MESSAGE] "+msg.getNick()+" --> "+(msg.getRecipient()!=null ? msg.getRecipient() : msg.getChannel())+": "+msg.getMessage()+"\n");
+               me.writePipeLine("[MESSAGE] "+msg.getNick()+" --> "+(msg.getRecipient()!=null ? msg.getRecipient() : msg.getChannel())+": "+msg.getMessage());
             }
          });
 
@@ -116,6 +116,7 @@ public class BotThread extends Thread {
             @Override
             public void handleCommand(CommandLineEvent e) {
                String chan = e.get(1);
+               me.writePipeLine("Join "+chan);
                bot.joinChannel(chan);
             }
          });
