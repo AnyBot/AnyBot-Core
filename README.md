@@ -4,6 +4,11 @@ Project is in development, early alpha.
 
 Current state: First productive tests
 
+License
+-------
+
+See LICENSE.txt
+
 Features
 --------
 
