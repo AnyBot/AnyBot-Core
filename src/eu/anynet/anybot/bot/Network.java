@@ -7,10 +7,7 @@
 package eu.anynet.anybot.bot;
 
 import java.io.IOException;
-import java.io.InterruptedIOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
@@ -82,15 +79,40 @@ public class Network
                      String msg = net.botthread.getPipeEndpoint().receive();
                      System.out.println("["+net.getHost()+"] "+msg);
                   }
-               } catch (IOException ex) {
-                  Logger.getLogger(Network.class.getName()).log(Level.SEVERE, null, ex);
-               }
+               } catch (Exception ex) {  }
             }
          };
 
          this.output.start();
       }
       return this.botthread;
+   }
+
+   public boolean isRunning()
+   {
+      return (this.botthread!=null && this.botthread.isAlive() && !this.botthread.isInterrupted());
+   }
+
+   public void stop()
+   {
+      if(this.botthread.isAlive() || !this.botthread.isInterrupted())
+      {
+         this.botthread.interrupt();
+         this.botthread = null;
+      }
+      if(this.output.isAlive() || this.output.isInterrupted())
+      {
+         this.output.interrupt();
+         this.output = null;
+      }
+   }
+
+   public void start() throws IOException
+   {
+      if(this.botthread==null && this.output==null)
+      {
+         this.getBotThread().start();
+      }
    }
 
    public void setAutostart(boolean b)

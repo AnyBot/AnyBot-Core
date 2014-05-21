@@ -6,8 +6,6 @@ package eu.anynet.anybot.bot;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.jibble.pircbot.IrcException;
 import org.jibble.pircbot.PircBot;
 
@@ -15,15 +13,29 @@ import org.jibble.pircbot.PircBot;
  *
  * @author sim
  */
-public class Bot extends PircBot {
+public class Bot extends PircBot
+{
 
    private ArrayList<Module> modules = new ArrayList<>();
    private boolean autoreconnect=false;
 
 
-   public Bot() {
-      this.setName("AnyBot|Dev");
+   public Bot(String ident, String realname, String ctcpfinger) {
+      this.setLogin(ident);
+      this.setVersion(realname);
+      this.setFinger(ctcpfinger);
    }
+
+   public Bot(String ident)
+   {
+      this(ident, ident, ident);
+   }
+
+   public Bot()
+   {
+      this("anybot", "anybot-0.0", "anybot-0.0");
+   }
+
 
 
    public void addModule(Module newmod)
@@ -90,8 +102,8 @@ public class Bot extends PircBot {
    @Override
    public void onDisconnect()
    {
-      if (this.isAutoReconnectEnabled()) {
-         //System.out.println("Server lost connection, reconnect!");
+      if (this.isAutoReconnectEnabled())
+      {
          try {
             while(true)
             {
@@ -104,9 +116,8 @@ public class Bot extends PircBot {
                   Thread.sleep(60000);
                }
             }
-         } catch (InterruptedException ex) {
-            Logger.getLogger(Bot.class.getName()).log(Level.SEVERE, null, ex);
-         }
+         } catch (InterruptedException ex) {  }
+         return;
       }
 
       ArrayList<Module> locallist = this.cloneModuleList();

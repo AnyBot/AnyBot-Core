@@ -4,7 +4,8 @@
  */
 package eu.anynet.anybot.bot;
 
-import eu.anynet.anybot.module.TimerDemo;
+import eu.anynet.anybot.AnyBot;
+import eu.anynet.anybot.module.LinkParser;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
@@ -55,19 +56,20 @@ public class BotThread extends Thread {
    @Override
    public void run()
    {
-      try {
-         //String host = this.getName();
+      try
+      {
          final BotThread me = this;
-         this.bot = new Bot();
+         this.bot = new Bot(this.network.getBotIdent(), this.network.getBotRealname(), AnyBot.VERSION);
 
          // TODO: Use reflection to add modules by xml dynamicly
-         // this.bot.addModule(new TimerDemo());
+         this.bot.addModule(new LinkParser());
 
          // TODO: Put this in a module class
          this.bot.addModule(new Module() {
             @Override
             public void onConnect(ChatEvent ev) {
                me.writePipeLine("Connected!");
+               me.bot.changeNick(me.network.getBotNickname());
                for(String channel : joinedchannels)
                {
                   me.writePipeLine("Join "+channel);
@@ -101,10 +103,12 @@ public class BotThread extends Thread {
                   joinedchannels.remove(msg.getChannel());
                }
             }
+            /*
             @Override
             public void onMessage(ChatMessage msg) {
-               me.writePipeLine("[MESSAGE] "+msg.getNick()+" --> "+(msg.getRecipient()!=null ? msg.getRecipient() : msg.getChannel())+": "+msg.getMessage());
+               me.writePipeLine("[MESSAGE] "+msg.getNick()+" -> "+(msg.getRecipient()!=null ? msg.getRecipient() : msg.getChannel())+": "+msg.getMessage());
             }
+            */
          });
 
          this.bot.enableAutoReconnect();

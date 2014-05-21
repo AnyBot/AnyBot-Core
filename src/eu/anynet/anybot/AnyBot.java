@@ -7,7 +7,6 @@ package eu.anynet.anybot;
 import eu.anynet.anybot.bot.BotThread;
 import eu.anynet.anybot.bot.Network;
 import eu.anynet.anybot.bot.NetworkSettingsStore;
-import eu.anynet.anybot.bot.ThreadManager;
 import eu.anynet.anybot.wizard.Wizard;
 import eu.anynet.anybot.wizard.WizardQuestion;
 import eu.anynet.anybot.wizard.WizardQuestionFlag;
@@ -22,7 +21,6 @@ import java.io.IOException;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.xml.bind.JAXBException;
 
 /**
  *
@@ -31,6 +29,7 @@ import javax.xml.bind.JAXBException;
 public class AnyBot
 {
 
+   public static final String VERSION = "anybot-0.1.1";
    public static final Properties properties = new Properties();
 
 
@@ -49,7 +48,6 @@ public class AnyBot
 
       // Command line parser
       final CommandLineParser parser = new CommandLineParser();
-      final ThreadManager pool = new ThreadManager();
       final SaveBoolean isRunning = new SaveBoolean(true);
 
       parser.addCommandLineListener(new CommandLineListener("^start") {
@@ -60,7 +58,14 @@ public class AnyBot
                if(networks.getNetworkKeys().contains(host))
                {
                   Network network = networks.getNetwork(host);
-                  network.getBotThread().start();
+                  if(!network.isRunning())
+                  {
+                     network.start();
+                  }
+                  else
+                  {
+                     System.out.println("["+host+"] Network already running.");
+                  }
                }
                else
                {
@@ -75,10 +80,22 @@ public class AnyBot
       parser.addCommandLineListener(new CommandLineListener("^stop") {
          @Override
          public void handleCommand(CommandLineEvent e) {
-            try {
-               networks.getNetwork(e.get(1)).getBotThread().interrupt();
-            } catch (IOException ex) {
-               Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
+            String host = e.get(1);
+            if(networks.getNetworkKeys().contains(host))
+            {
+               Network network = networks.getNetwork(host);
+               if(network.isRunning())
+               {
+                  network.stop();
+               }
+               else
+               {
+                  System.out.println("["+host+"] Network not running.");
+               }
+            }
+            else
+            {
+               System.out.println("["+host+"] Network definition not found.");
             }
          }
       });
@@ -212,102 +229,6 @@ public class AnyBot
       //--> Start the bot master thread
       AnyBot anybot = new AnyBot();
       anybot.begin();
-
-
-
-      //--> Test stuff... Ignore it...
-
-      /*
-      Wizard wiz = new Wizard();
-      wiz.addQuestion(new WizardQuestion("Hostname (iz-smart.net)", WizardQuestion.REGEX_ANY));
-      wiz.addQuestion(new WizardQuestion("Port (6667)", WizardQuestion.REGEX_INTEGER));
-      wiz.addQuestion(new WizardQuestion("Nickname", WizardQuestion.REGEX_IRCNICK));
-
-      wiz.startWizard();
-      */
-
-      /*
-      NetworkSettings ns_coolirc = new NetworkSettings();
-      ns_coolirc.setAutostart(true);
-      ns_coolirc.setBotIdent("anybot");
-      ns_coolirc.setBotNickname("AnyBot|dev");
-      ns_coolirc.setBotRealname("AnyBot <b>Development</b> Instance");
-      ns_coolirc.setHost("a-cool-irc.net");
-      ns_coolirc.setPort(1337);
-      ns_coolirc.setSsl(true);
-
-      IRCCommand cmd1 = new IRCCommand();
-      cmd1.setType(IRCCommand.CommandType.USER);
-      cmd1.setTarget("NickServ");
-      cmd1.setCommand("IDENTIFY huhu123");
-
-      ns_coolirc.addAfterConnectCommand(cmd1);
-
-      NetworkSettings ns_izsmart = new NetworkSettings();
-      ns_izsmart.setBotIdent("anybot");
-      ns_izsmart.setBotNickname("AnyBot|izdev");
-      ns_izsmart.setBotRealname("iz-smart development instance");
-      ns_izsmart.setHost("iz-smart.net");
-      ns_izsmart.setPort(6667);
-
-      ns_izsmart.addBeforeDisconnectCommand(cmd1);
-
-      NetworkSettingsStore store = new NetworkSettingsStore();
-      store.addNetwork("anynet", ns_coolirc);
-      store.addNetwork("izsmart", ns_izsmart);
-
-      try {
-         File nsfile = store.serialize();
-         NetworkSettingsStore newsettings = new NetworkSettingsStore().createSerializer(nsfile).unserialize();
-
-         //NetworkSettings newsettings = serr.unserialize();
-         System.out.println("Networks: "+StringUtils.join(newsettings.getNetworkKeys().toArray(), ", "));
-
-      } catch (JAXBException ex) {
-         Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
-      } catch (IOException ex) {
-         Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
-      }
-      */
-
-      /*
-      try {
-      JAXBContext context = JAXBContext.newInstance(NetworkSettings.class);
-      Marshaller m = context.createMarshaller();
-      m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-
-      // Write to System.out
-      m.marshal(ns, System.out);
-
-      }
-      catch(JAXBException ex)
-      {
-      ex.printStackTrace();
-      }
-      */
-
-      /*
-      private Plugin createPluginInstance(boolean override) throws Exception {
-      String pluginname = this.configPluginlist.get(this.pluginList.getSelectedIndex()).get(0);
-
-      if(!this.pluginInstances.containsKey(pluginname) || override) {
-      Class myPlugin = Class.forName("comicdownloader.plugins."+pluginname);
-      Object o = myPlugin.getConstructor().newInstance();
-      myPlugin.getMethod("setGui", new Class[]{GUI.class}).invoke(o, this);
-      this.pluginInstances.put(pluginname, (Plugin)o);
-      return (Plugin)o;
-      } else {
-      return this.pluginInstances.get(pluginname);
-      }
-      }
-      */
-      /*
-      List<String> classes = PackageScanner.listClassesInPackage("eu.anynet.anybot.bot");
-      for(String cl : classes)
-      {
-      System.out.println(cl);
-      }
-      */
 
    }
 
