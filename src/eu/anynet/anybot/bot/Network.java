@@ -63,6 +63,11 @@ public class Network
          this.botthread = new BotThread(this);
          final Network net = this;
 
+         for(IRCCommand cmd : this.afterConnectCommands)
+         {
+            this.botthread.addStartupCommand(cmd);
+         }
+
          if(this.output!=null && (this.output.isAlive() || !this.output.isInterrupted()))
          {
             this.output.interrupt();

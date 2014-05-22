@@ -26,12 +26,19 @@ public class BotThread extends Thread {
    private final ThreadPipes pipes;
    private final ArrayList<String> joinedchannels;
    private final Network network;
+   private ArrayList<IRCCommand> startupcommands;
 
    public BotThread(Network network) throws IOException
    {
       this.pipes = new ThreadPipes();
       this.joinedchannels = new ArrayList<>();
       this.network = network;
+      this.startupcommands = new ArrayList<>();
+   }
+
+   public void addStartupCommand(IRCCommand cmd)
+   {
+      this.startupcommands.add(cmd);
    }
 
    public ThreadPipeEndpoint getPipeEndpoint()
@@ -70,11 +77,18 @@ public class BotThread extends Thread {
             public void onConnect(ChatEvent ev) {
                me.writePipeLine("Connected!");
                me.bot.changeNick(me.network.getBotNickname());
+
                for(String channel : joinedchannels)
                {
                   me.writePipeLine("Join "+channel);
                   ev.getBot().joinChannel(channel);
                }
+
+               for(IRCCommand cmd : startupcommands)
+               {
+                  me.bot.sendRawLineViaQueue(cmd.buildRawCommand());
+               }
+
             }
             @Override
             public void onInvite(ChatMessage msg) {

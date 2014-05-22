@@ -20,7 +20,7 @@ public class IRCCommand
 {
    public enum CommandType
    {
-      CHANNEL, USER, RAW
+      PRIVMSG, RAW
    }
 
    private CommandType type;
@@ -31,24 +31,43 @@ public class IRCCommand
       return type;
    }
 
-   public void setType(CommandType type) {
+   public IRCCommand setType(CommandType type) {
       this.type = type;
+      return this;
    }
 
    public String getTarget() {
       return target;
    }
 
-   public void setTarget(String target) {
+   public IRCCommand setTarget(String target) {
       this.target = target;
+      return this;
    }
 
    public String getCommand() {
       return command;
    }
 
-   public void setCommand(String command) {
+   public IRCCommand setCommand(String command) {
       this.command = command;
+      return this;
+   }
+
+   public String buildRawCommand()
+   {
+      if(this.type==CommandType.RAW)
+      {
+         return this.getCommand();
+      }
+      else if(this.type==CommandType.PRIVMSG)
+      {
+         return "PRIVMSG "+this.getTarget()+" "+this.getCommand();
+      }
+      else
+      {
+         return null;
+      }
    }
 
 
