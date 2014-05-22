@@ -236,7 +236,7 @@ public class LinkParser extends Module
    private ParserResult parseYoutube(String url)
    {
       // http://www.youtube.com/watch?v=wcLNteez3c4
-      String result = Regex.findByRegexFirst("https?://www\\.youtube\\.com/watch?.*?v=([^&\\s]+)", url);
+      String result = Regex.findByRegexFirst("https?://www\\.youtube\\.com/watch?.*?v=([^&\\s#]+)", url);
       if(result!=null)
       {
          HTTPConnector client = new HTTPConnector();
