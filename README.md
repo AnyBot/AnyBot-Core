@@ -25,6 +25,7 @@ Powered by
 * http://hc.apache.org/
 * https://jaxb.java.net/
 * http://commons.apache.org/
+* https://code.google.com/p/reflections/
 
 Requirements
 ------------
