@@ -4,9 +4,9 @@
  */
 package eu.anynet.anybot;
 
-import eu.anynet.anybot.bot.BotThread;
 import eu.anynet.anybot.bot.Network;
 import eu.anynet.anybot.bot.NetworkSettingsStore;
+import eu.anynet.anybot.commands.CommandBase;
 import eu.anynet.anybot.wizard.Wizard;
 import eu.anynet.anybot.wizard.WizardQuestion;
 import eu.anynet.anybot.wizard.WizardQuestionFlag;
@@ -17,10 +17,8 @@ import eu.anynet.java.util.Properties;
 import eu.anynet.java.util.SaveBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
-import java.io.IOException;
 import java.util.Scanner;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  *
@@ -50,86 +48,7 @@ public class AnyBot
       final CommandLineParser parser = new CommandLineParser();
       final SaveBoolean isRunning = new SaveBoolean(true);
 
-      parser.addCommandLineListener(new CommandLineListener("^start") {
-         @Override
-         public void handleCommand(CommandLineEvent e) {
-            String host = e.get(1);
-            try {
-               if(networks.getNetworkKeys().contains(host))
-               {
-                  Network network = networks.getNetwork(host);
-                  if(!network.isRunning())
-                  {
-                     network.start();
-                  }
-                  else
-                  {
-                     System.out.println("["+host+"] Network already running.");
-                  }
-               }
-               else
-               {
-                  System.out.println("["+host+"] Network definition not found.");
-               }
-            } catch(IOException ex) {
-               System.out.println("["+host+"] Could not start: "+ex.getMessage());
-            }
-         }
-      });
-
-      parser.addCommandLineListener(new CommandLineListener("^stop") {
-         @Override
-         public void handleCommand(CommandLineEvent e) {
-            String host = e.get(1);
-            if(networks.getNetworkKeys().contains(host))
-            {
-               Network network = networks.getNetwork(host);
-               if(network.isRunning())
-               {
-                  network.stop();
-               }
-               else
-               {
-                  System.out.println("["+host+"] Network not running.");
-               }
-            }
-            else
-            {
-               System.out.println("["+host+"] Network definition not found.");
-            }
-         }
-      });
-
-      parser.addCommandLineListener(new CommandLineListener("^exit") {
-         @Override
-         public void handleCommand(CommandLineEvent e)
-         {
-            for(String netname : networks.getNetworkKeys())
-            {
-               try {
-                  BotThread thr = networks.getNetwork(netname).getBotThread();
-                  if(thr.isAlive())
-                  {
-                     thr.interrupt();
-                  }
-               } catch (IOException ex) {
-                  System.out.println("["+netname+"] Could not interrupt: "+ex.getMessage());
-               }
-            }
-            isRunning.setFalse();
-         }
-      });
-
-      parser.addCommandLineListener(new CommandLineListener("^send") {
-         @Override
-         public void handleCommand(CommandLineEvent e) {
-            try {
-               networks.getNetwork(e.get(1)).getBotThread().getPipeEndpoint().send(e.get(2, -1)+"\n");
-            } catch (IOException ex) {
-               Logger.getLogger(AnyBot.class.getName()).log(Level.SEVERE, null, ex);
-            }
-         }
-      });
+      CommandBase.loadAll(parser, new Object[] { networks, isRunning });
 
       parser.addCommandLineListener(new CommandLineListener("^change") {
          @Override
@@ -208,6 +127,12 @@ public class AnyBot
       {
          System.out.print("> ");
          parser.handleCommandLine(in.nextLine());
+         String[] mq = parser.consumeMessageQueue();
+         if(mq!=null && mq.length>0)
+         {
+            System.out.print("Usage: ");
+            System.out.println(StringUtils.join(mq, "\n"));
+         }
       }
 
       System.out.println("\nBye!");

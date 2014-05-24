@@ -13,6 +13,7 @@ import java.util.ArrayList;
 public class CommandLineParser {
 
    private ArrayList<CommandLineListener> commandLineListenerList = new ArrayList<>();
+   private ArrayList<String> messagequeue = new ArrayList<>();
 
    public synchronized void addCommandLineListener(CommandLineListener newl)
    {
@@ -21,7 +22,22 @@ public class CommandLineParser {
          this.commandLineListenerList.add(newl);
       }
    }
-
+   
+   public synchronized void removeCommandLineListener(CommandLineListener l)
+   {
+      if(this.commandLineListenerList.contains(l))
+      {
+         this.commandLineListenerList.remove(l);
+      }
+   }
+   
+   public String[] consumeMessageQueue()
+   {
+      String[] queue = this.messagequeue.toArray(new String[this.messagequeue.size()]);
+      this.messagequeue.clear();
+      return queue;
+   }
+   
    public void handleCommandLine(String line)
    {
       this.handleCommandLine(new CommandLineEvent(line));
@@ -43,7 +59,13 @@ public class CommandLineParser {
          if(listener.isResponsible(e.get()))
          {
             i++;
-            listener.handleCommand(e);
+            if(listener.isValid(e.get()))
+            {
+               listener.handleCommand(e);
+            } else if(listener.getUsage()!=null)
+            {
+               this.messagequeue.add(listener.getUsage());
+            }
          }
       }
       
