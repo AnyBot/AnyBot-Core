@@ -2,16 +2,28 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package eu.anynet.anybot.bot;
+package eu.anynet.anybot;
 
-import eu.anynet.anybot.AnyBot;
-import eu.anynet.anybot.module.LinkParser;
+import eu.anynet.anybot.bot.Bot;
+import eu.anynet.anybot.bot.ChatEvent;
+import eu.anynet.anybot.bot.ChatMessage;
+import eu.anynet.anybot.bot.IRCCommand;
+import eu.anynet.anybot.bot.Module;
+import eu.anynet.anybot.bot.ThreadPipeEndpoint;
+import eu.anynet.anybot.bot.ThreadPipes;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
+import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.jibble.pircbot.IrcException;
@@ -66,10 +78,39 @@ public class BotThread extends Thread {
       try
       {
          final BotThread me = this;
-         this.bot = new Bot(this.network.getBotIdent(), this.network.getBotRealname(), AnyBot.VERSION);
+         this.bot = new Bot(this.network.getBotIdent(), this.network.getBotRealname(), "anybot-1.0.0");
 
-         // TODO: Use reflection to add modules by xml dynamicly
-         this.bot.addModule(new LinkParser());
+         // http://www.informatik-forum.at/showthread.php?66277-Java-Plugin-System-mit-jar-Dateien
+         String modulefolder = AnyBot.properties.get("fs.execdir")+"modules"+File.separator;
+         File[] jars = new File(modulefolder).listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+               return pathname.getName().endsWith(".jar");
+            }
+         });
+
+         if(jars!=null && jars.length>0)
+         {
+            for(File jar : jars)
+            {
+               try {
+                  URLClassLoader loader = URLClassLoader.newInstance(new URL[] { jar.toURI().toURL() });
+                  ResourceBundle props = ResourceBundle.getBundle("anybotmodule", Locale.getDefault(), loader);
+                  final String isubClassName = props.getString("anbot.module.module");
+                  Module sub = (Module) loader.loadClass(isubClassName).newInstance();
+                  sub.mergeProperties(AnyBot.properties);
+                  this.bot.addModule(sub);
+                  sub.launch();
+                  me.writePipeLine("Load module "+jar.getName());
+               }
+               catch(MalformedURLException | ClassNotFoundException | InstantiationException | IllegalAccessException ex)
+               {
+                  me.writePipeLine("Load of module "+jar.getName()+" failed: "+ex.getMessage());
+               }
+            }
+         }
+
+
 
          // TODO: Put this in a module class
          this.bot.addModule(new Module() {
@@ -117,12 +158,6 @@ public class BotThread extends Thread {
                   joinedchannels.remove(msg.getChannel());
                }
             }
-            /*
-            @Override
-            public void onMessage(ChatMessage msg) {
-               me.writePipeLine("[MESSAGE] "+msg.getNick()+" -> "+(msg.getRecipient()!=null ? msg.getRecipient() : msg.getChannel())+": "+msg.getMessage());
-            }
-            */
          });
 
          this.bot.enableAutoReconnect();

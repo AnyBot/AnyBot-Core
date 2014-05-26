@@ -4,8 +4,9 @@
  * and open the template in the editor.
  */
 
-package eu.anynet.anybot.bot;
+package eu.anynet.anybot;
 
+import eu.anynet.anybot.bot.IRCCommand;
 import java.io.IOException;
 import java.util.ArrayList;
 import javax.xml.bind.annotation.XmlAccessType;

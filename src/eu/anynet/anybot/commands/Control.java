@@ -7,11 +7,12 @@
 package eu.anynet.anybot.commands;
 
 import eu.anynet.anybot.AnyBot;
-import eu.anynet.anybot.bot.BotThread;
-import eu.anynet.anybot.bot.Network;
-import eu.anynet.anybot.bot.NetworkSettingsStore;
+import eu.anynet.anybot.BotThread;
+import eu.anynet.anybot.Network;
+import eu.anynet.anybot.NetworkSettingsStore;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
+import eu.anynet.java.util.CommandLineModuleBase;
 import eu.anynet.java.util.CommandLineParser;
 import eu.anynet.java.util.SaveBoolean;
 import java.io.IOException;
@@ -23,22 +24,22 @@ import java.util.logging.Logger;
  *
  * @author perry
  */
-public class Control extends CommandBase {
+public class Control extends CommandLineModuleBase {
 
-   public Control(CommandLineParser parser, Object[] additionalobjects) 
+   public Control(CommandLineParser parser, Object[] additionalobjects)
    {
       super(parser, additionalobjects);
       this.isEnabled.setTrue();
    }
 
    @Override
-   ArrayList<CommandLineListener> getCommands() 
+   public ArrayList<CommandLineListener> getCommands()
    {
       final NetworkSettingsStore networks = (NetworkSettingsStore)this.getObjectAt(0);
       final SaveBoolean isRunning = (SaveBoolean)this.getObjectAt(1);
       ArrayList<CommandLineListener> commands = new ArrayList<>();
-      
-      
+
+
       commands.add(new CommandLineListener("^start", "^start[\\s]+[a-zA-Z0-9]+") {
          @Override
          public void handleCommand(CommandLineEvent e) {
@@ -69,10 +70,10 @@ public class Control extends CommandBase {
          public String getUsage() {
             return "start networkname";
          }
-         
+
       });
-      
-      
+
+
       commands.add(new CommandLineListener("^stop", "^stop[\\s]+[a-zA-Z0-9]+") {
          @Override
          public void handleCommand(CommandLineEvent e) {
@@ -99,10 +100,10 @@ public class Control extends CommandBase {
          public String getUsage() {
             return "stop networkname";
          }
-         
+
       });
-      
-      
+
+
       commands.add(new CommandLineListener("^exit") {
          @Override
          public void handleCommand(CommandLineEvent e)
@@ -122,8 +123,8 @@ public class Control extends CommandBase {
             isRunning.setFalse();
          }
       });
-      
-      
+
+
       commands.add(new CommandLineListener("^send", "^send[\\s]+[a-zA-Z0-9]+[\\s]+.+") {
          @Override
          public void handleCommand(CommandLineEvent e) {
@@ -146,11 +147,11 @@ public class Control extends CommandBase {
          public String getUsage() {
             return "send networkname command";
          }
-         
+
       });
-      
-      
+
+
       return commands;
    }
-   
+
 }

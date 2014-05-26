@@ -4,7 +4,7 @@
  * and open the template in the editor.
  */
 
-package eu.anynet.anybot.bot;
+package eu.anynet.anybot;
 
 import eu.anynet.java.util.Serializable;
 import java.util.ArrayList;

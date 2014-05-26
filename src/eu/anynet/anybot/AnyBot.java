@@ -4,19 +4,18 @@
  */
 package eu.anynet.anybot;
 
-import eu.anynet.anybot.bot.Network;
-import eu.anynet.anybot.bot.NetworkSettingsStore;
-import eu.anynet.anybot.commands.CommandBase;
 import eu.anynet.anybot.wizard.Wizard;
 import eu.anynet.anybot.wizard.WizardQuestion;
 import eu.anynet.anybot.wizard.WizardQuestionFlag;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
+import eu.anynet.java.util.CommandLineModuleBase;
 import eu.anynet.java.util.CommandLineParser;
 import eu.anynet.java.util.Properties;
 import eu.anynet.java.util.SaveBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
+import java.security.ProtectionDomain;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringUtils;
 
@@ -48,7 +47,7 @@ public class AnyBot
       final CommandLineParser parser = new CommandLineParser();
       final SaveBoolean isRunning = new SaveBoolean(true);
 
-      CommandBase.loadAll(parser, new Object[] { networks, isRunning });
+      CommandLineModuleBase.loadAll(parser, new Object[] { networks, isRunning });
 
       parser.addCommandLineListener(new CommandLineListener("^change") {
          @Override
@@ -147,6 +146,11 @@ public class AnyBot
 
       //--> Properties
       properties.set("fs.settings", System.getProperty("user.home")+File.separator+".AnyBot"+File.separator);
+      properties.set("fs.cwd", System.getProperty("user.dir")+File.separator);
+
+      File f = (new File(AnyBot.class.getProtectionDomain().getCodeSource().getLocation().getPath()));
+      if(f.isFile()) { f = f.getParentFile(); }
+      properties.set("fs.execdir", f.getAbsolutePath()+File.separator);
 
       //--> Set serializer default folder
       Serializer.setDefaultFolder(properties.get("fs.settings"));
