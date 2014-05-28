@@ -109,6 +109,10 @@ public class BotThread extends Thread {
                }
             }
          }
+         else
+         {
+            me.writePipeLine("No modules found.");
+         }
 
 
 
