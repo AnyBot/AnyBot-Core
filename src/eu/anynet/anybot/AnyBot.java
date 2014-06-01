@@ -15,7 +15,7 @@ import eu.anynet.java.util.Properties;
 import eu.anynet.java.util.SaveBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
-import java.security.ProtectionDomain;
+import java.io.FileFilter;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,13 +26,35 @@ import org.apache.commons.lang3.StringUtils;
 public class AnyBot
 {
 
-   public static final String VERSION = "anybot-0.1.1";
+   public static final String VERSION = "anybot-0.1.6";
    public static final Properties properties = new Properties();
 
 
    public void begin()
    {
-
+      
+      System.out.println("Welcome to AnyBot "+VERSION+"!");
+      System.out.println();
+      
+      // Available modules
+      String modulefolder = AnyBot.properties.get("fs.execdir")+"modules"+File.separator;
+      File[] jars = new File(modulefolder).listFiles(new FileFilter() {
+         @Override
+         public boolean accept(File pathname) {
+            return pathname.getName().endsWith(".jar");
+         }
+      });
+      
+      String[] jarnames = new String[jars.length];
+      for(int i=0; i<jars.length; i++) jarnames[i] = jars[i].getName();
+      String modules = StringUtils.join(jarnames, ", ");
+      
+      System.out.println("Settings folder: "+properties.get("fs.settings"));
+      System.out.println("Current working directory: "+properties.get("fs.cwd"));
+      System.out.println("Execution directory: "+properties.get("fs.execdir"));
+      System.out.println("Available modules: "+ (modules==null ? "No modules found!" : modules+" ("+jars.length+")"));
+      
+      
       // Load Network store
       File networkpoolfile = new File(properties.get("fs.settings")+"networks.xml");
       Serializer<NetworkSettingsStore> serializer = new NetworkSettingsStore().createSerializer(networkpoolfile);
@@ -119,8 +141,10 @@ public class AnyBot
             }
          }
       });
+      
+      System.out.println();
+      System.out.println("AnyBot shell launched, enjoy!");
 
-      System.out.println("Welcome to the anybot shell!");
       Scanner in = new Scanner(System.in);
       while(isRunning.get())
       {
