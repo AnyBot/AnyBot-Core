@@ -4,6 +4,7 @@
  */
 package eu.anynet.anybot;
 
+import static eu.anynet.anybot.AnyBot.properties;
 import eu.anynet.anybot.bot.Bot;
 import eu.anynet.anybot.bot.ChatEvent;
 import eu.anynet.anybot.bot.ChatMessage;
@@ -33,6 +34,8 @@ import org.jibble.pircbot.IrcException;
  * @author sim
  */
 public class BotThread extends Thread {
+
+// http://en.wikipedia.org/wiki/List_of_Internet_Relay_Chat_commands
 
    private Bot bot;
    private final ThreadPipes pipes;
@@ -78,7 +81,7 @@ public class BotThread extends Thread {
       try
       {
          final BotThread me = this;
-         this.bot = new Bot(this.network.getBotIdent(), this.network.getBotRealname(), "anybot-1.0.0");
+         this.bot = new Bot(this.network.getBotIdent(), this.network.getBotRealname(), "anybot-2.0.0");
 
          // http://www.informatik-forum.at/showthread.php?66277-Java-Plugin-System-mit-jar-Dateien
          String modulefolder = AnyBot.properties.get("fs.execdir")+"modules"+File.separator;
@@ -140,7 +143,16 @@ public class BotThread extends Thread {
                if(msg.getBot().getNick().equals(msg.getMessage()))
                {
                   String chan = msg.getChannel();
-                  msg.getBot().joinChannel(chan);
+                  String source = msg.getNick();
+
+                  if(msg.getHost().equals("sim4000.off.users.iZ-smart.net"))
+                  {
+                     msg.getBot().joinChannel(chan);
+                  }
+                  else
+                  {
+                     msg.respondNotice("Access denied!");
+                  }
                }
             }
             @Override
@@ -160,6 +172,17 @@ public class BotThread extends Thread {
                if(msg.getRecipient().equals(msg.getBot().getNick()) && joinedchannels.contains(msg.getChannel()))
                {
                   joinedchannels.remove(msg.getChannel());
+               }
+            }
+         });
+
+         this.bot.addModule(new Module() {
+            @Override
+            public void onMessage(ChatMessage msg)
+            {
+               if(msg.isBotAsked() && msg.count()>1 && msg.get(1).equalsIgnoreCase("version"))
+               {
+                  msg.respond(properties.get("versionstring"));
                }
             }
          });
@@ -198,6 +221,13 @@ public class BotThread extends Thread {
             @Override
             public void handleCommand(CommandLineEvent e) {
                bot.sendMessage(e.get(1), e.get(2, -1, " "));
+            }
+         });
+
+         parser.addCommandLineListener(new CommandLineListener("^raw") {
+            @Override
+            public void handleCommand(CommandLineEvent e) {
+               bot.sendRawLineViaQueue(e.get(1, -1, " "));
             }
          });
 

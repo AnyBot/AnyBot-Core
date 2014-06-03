@@ -16,6 +16,8 @@ import eu.anynet.java.util.SaveBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
 import java.io.FileFilter;
+import java.util.Locale;
+import java.util.ResourceBundle;
 import java.util.Scanner;
 import org.apache.commons.lang3.StringUtils;
 
@@ -26,16 +28,17 @@ import org.apache.commons.lang3.StringUtils;
 public class AnyBot
 {
 
-   public static final String VERSION = "anybot-0.1.6";
+   public static final String BASEVERSION = "anybot-1.0";
    public static final Properties properties = new Properties();
 
 
    public void begin()
    {
-      
-      System.out.println("Welcome to AnyBot "+VERSION+"!");
+
+      System.out.println("Welcome to AnyBot!");
+      System.out.println("Version: "+properties.get("versionstring"));
       System.out.println();
-      
+
       // Available modules
       String modulefolder = AnyBot.properties.get("fs.execdir")+"modules"+File.separator;
       File[] jars = new File(modulefolder).listFiles(new FileFilter() {
@@ -44,17 +47,17 @@ public class AnyBot
             return pathname.getName().endsWith(".jar");
          }
       });
-      
+
       String[] jarnames = new String[jars.length];
       for(int i=0; i<jars.length; i++) jarnames[i] = jars[i].getName();
       String modules = StringUtils.join(jarnames, ", ");
-      
+
       System.out.println("Settings folder: "+properties.get("fs.settings"));
       System.out.println("Current working directory: "+properties.get("fs.cwd"));
       System.out.println("Execution directory: "+properties.get("fs.execdir"));
       System.out.println("Available modules: "+ (modules==null ? "No modules found!" : modules+" ("+jars.length+")"));
-      
-      
+
+
       // Load Network store
       File networkpoolfile = new File(properties.get("fs.settings")+"networks.xml");
       Serializer<NetworkSettingsStore> serializer = new NetworkSettingsStore().createSerializer(networkpoolfile);
@@ -141,7 +144,15 @@ public class AnyBot
             }
          }
       });
-      
+
+      parser.addCommandLineListener(new CommandLineListener("^version") {
+         @Override
+         public void handleCommand(CommandLineEvent e)
+         {
+            System.out.println(properties.get("versionstring"));
+         }
+      });
+
       System.out.println();
       System.out.println("AnyBot shell launched, enjoy!");
 
@@ -167,6 +178,14 @@ public class AnyBot
     */
    public static void main(String[] args)
    {
+
+      //--> Copy version info to properties
+      ResourceBundle vprops = ResourceBundle.getBundle("version", Locale.getDefault());
+      properties.set("buildnumber", vprops.getString("BUILDNUMBER"));
+      properties.set("builddate", vprops.getString("BUILDDATE"));
+      properties.set("version", BASEVERSION);
+      properties.set("versionbuild", properties.get("version")+" build "+properties.get("buildnumber"));
+      properties.set("versionstring", properties.get("versionbuild")+" (compiled on "+properties.get("builddate")+")");
 
       //--> Properties
       properties.set("fs.settings", System.getProperty("user.home")+File.separator+".AnyBot"+File.separator);
