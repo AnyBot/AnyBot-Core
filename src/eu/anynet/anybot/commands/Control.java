@@ -48,6 +48,7 @@ public class Control extends CommandLineModuleBase {
                if(networks.getNetworkKeys().contains(host))
                {
                   Network network = networks.getNetwork(host);
+                  network.setNetworkStore(networks);
                   if(!network.isRunning())
                   {
                      network.start();

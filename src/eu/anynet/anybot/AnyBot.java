@@ -15,7 +15,6 @@ import eu.anynet.java.util.Properties;
 import eu.anynet.java.util.SaveBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
-import java.io.FileFilter;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.Scanner;
@@ -35,28 +34,20 @@ public class AnyBot
    public void begin()
    {
 
+      // Version info
       System.out.println("Welcome to AnyBot!");
       System.out.println("Version: "+properties.get("versionstring"));
       System.out.println();
 
-      // Available modules
-      String modulefolder = AnyBot.properties.get("fs.execdir")+"modules"+File.separator;
-      File[] jars = new File(modulefolder).listFiles(new FileFilter() {
-         @Override
-         public boolean accept(File pathname) {
-            return pathname.getName().endsWith(".jar");
-         }
-      });
-
-      String[] jarnames = new String[jars.length];
-      for(int i=0; i<jars.length; i++) jarnames[i] = jars[i].getName();
-      String modules = StringUtils.join(jarnames, ", ");
-
+      // Directories
       System.out.println("Settings folder: "+properties.get("fs.settings"));
       System.out.println("Current working directory: "+properties.get("fs.cwd"));
       System.out.println("Execution directory: "+properties.get("fs.execdir"));
-      System.out.println("Available modules: "+ (modules==null ? "No modules found!" : modules+" ("+jars.length+")"));
+      System.out.println();
 
+      // Available modules
+      String modules = StringUtils.join(ModuleUtils.getModuleNames(), ", ");
+      System.out.println(ModuleUtils.getModuleCount()+" modules found: "+ (modules==null ? "No modules found!" : modules));
 
       // Load Network store
       File networkpoolfile = new File(properties.get("fs.settings")+"networks.xml");
@@ -102,6 +93,7 @@ public class AnyBot
             wiz.addQuestion(new WizardQuestion("ident", "Ident").setCheck(WizardQuestion.REGEX_IRCNICK).setDefault(network.getBotIdent()));
             wiz.addQuestion(new WizardQuestion("realname", "Realname").setDefault(network.getBotRealname()));
             wiz.addQuestion(new WizardQuestionFlag("autostart", "Autostart").setDefault(network.isAutostartEnabled() ? "yes" : "no"));
+            wiz.addQuestion(new WizardQuestionFlag("debugchannel", "DebugChannel").setDefault(network.getDebugChannel()==null ? "" : network.getDebugChannel()));
             Properties result = wiz.startWizard();
 
             network.setAutostart(result.getBoolean("autostart"));
@@ -111,6 +103,7 @@ public class AnyBot
             network.setBotNickname(result.get("nick"));
             network.setBotIdent(result.get("ident"));
             network.setBotRealname(result.get("realname"));
+            network.setDebugChannel(result.get("debugchannel"));
 
             if(newnet==true)
             {

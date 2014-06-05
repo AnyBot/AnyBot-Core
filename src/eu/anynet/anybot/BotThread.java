@@ -16,13 +16,13 @@ import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineParser;
 import java.io.File;
-import java.io.FileFilter;
 import java.io.IOException;
 import java.io.InterruptedIOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
@@ -33,20 +33,19 @@ import org.jibble.pircbot.IrcException;
  *
  * @author sim
  */
-public class BotThread extends Thread {
+public class BotThread extends Thread
+{
 
-// http://en.wikipedia.org/wiki/List_of_Internet_Relay_Chat_commands
+   // http://en.wikipedia.org/wiki/List_of_Internet_Relay_Chat_commands
 
    private Bot bot;
    private final ThreadPipes pipes;
-   private final ArrayList<String> joinedchannels;
    private final Network network;
    private ArrayList<IRCCommand> startupcommands;
 
    public BotThread(Network network) throws IOException
    {
       this.pipes = new ThreadPipes();
-      this.joinedchannels = new ArrayList<>();
       this.network = network;
       this.startupcommands = new ArrayList<>();
    }
@@ -68,6 +67,11 @@ public class BotThread extends Thread {
 
    private void writePipeLine(String message)
    {
+      if(this.network.isDebugChannelSet())
+      {
+         this.bot.sendMessage(this.network.getDebugChannel(), message);
+      }
+
       try {
          this.pipes.getInsideEndpoint().send(message+"\n");
       } catch (IOException ex) {
@@ -82,15 +86,10 @@ public class BotThread extends Thread {
       {
          final BotThread me = this;
          this.bot = new Bot(this.network.getBotIdent(), this.network.getBotRealname(), "anybot-2.0.0");
+         this.bot.setDebugChannel(this.network.getDebugChannel());
 
          // http://www.informatik-forum.at/showthread.php?66277-Java-Plugin-System-mit-jar-Dateien
-         String modulefolder = AnyBot.properties.get("fs.execdir")+"modules"+File.separator;
-         File[] jars = new File(modulefolder).listFiles(new FileFilter() {
-            @Override
-            public boolean accept(File pathname) {
-               return pathname.getName().endsWith(".jar");
-            }
-         });
+         File[] jars = ModuleUtils.getModuleFiles();
 
          if(jars!=null && jars.length>0)
          {
@@ -120,32 +119,54 @@ public class BotThread extends Thread {
 
 
          // TODO: Put this in a module class
-         this.bot.addModule(new Module() {
+         this.bot.addModule(new Module()
+         {
+
             @Override
             public void onConnect(ChatEvent ev) {
                me.writePipeLine("Connected!");
                me.bot.changeNick(me.network.getBotNickname());
 
-               for(String channel : joinedchannels)
+               // Startup Commands
+               if(me.startupcommands!=null && me.startupcommands.size()>0)
                {
-                  me.writePipeLine("Join "+channel);
-                  ev.getBot().joinChannel(channel);
+                  for(IRCCommand cmd : me.startupcommands)
+                  {
+                     String cmdstr = cmd.buildRawCommand();
+                     me.bot.sendRawLine(cmdstr);
+                  }
                }
 
-               for(IRCCommand cmd : startupcommands)
+               // Join Debug Channel
+               if(me.network.isDebugChannelSet())
                {
-                  me.bot.sendRawLineViaQueue(cmd.buildRawCommand());
+                  me.bot.joinChannel(me.network.getDebugChannel());
+               }
+
+               // Join stored channels
+               String[] joinedchannels = me.network.getJoinedChannels();
+               if(joinedchannels!=null && joinedchannels.length>0)
+               {
+                  for(String channel : joinedchannels)
+                  {
+                     me.writePipeLine("Join "+channel);
+                     if(!Arrays.asList(ev.getBot().getChannels()).contains(channel))
+                     {
+                        ev.getBot().joinChannel(channel);
+                     }
+                  }
                }
 
             }
+
             @Override
             public void onInvite(ChatMessage msg) {
                if(msg.getBot().getNick().equals(msg.getMessage()))
                {
                   String chan = msg.getChannel();
-                  String source = msg.getNick();
+                  //String source = msg.getNick();
 
-                  if(msg.getHost().equals("sim4000.off.users.iZ-smart.net"))
+                  if(msg.getHost().equals("sim4000.off.users.iZ-smart.net") || (chan!=null && me.network.getDebugChannel()!=null && chan.equals(me.network.getDebugChannel())))
                   {
                      msg.getBot().joinChannel(chan);
                   }
@@ -157,29 +178,31 @@ public class BotThread extends Thread {
             }
             @Override
             public void onJoin(ChatMessage msg) {
-               if(msg.getNick().equals(msg.getBot().getNick()) && !joinedchannels.contains(msg.getChannel())) {
-                  joinedchannels.add(msg.getChannel());
+               if(msg.getNick().equals(msg.getBot().getNick())) {
+                  me.network.addJoinedChannel(msg.getChannel());
+                  me.network.serialize();
                }
             }
             @Override
             public void onPart(ChatMessage msg) {
-               if(msg.getNick().equals(msg.getBot().getNick()) && joinedchannels.contains(msg.getChannel())) {
-                  joinedchannels.remove(msg.getChannel());
+               if(msg.getNick().equals(msg.getBot().getNick())) {
+                  me.network.removeJoinedChannel(msg.getChannel());
+                  me.network.serialize();
                }
             }
             @Override
             public void onKick(ChatMessage msg) {
-               if(msg.getRecipient().equals(msg.getBot().getNick()) && joinedchannels.contains(msg.getChannel()))
+               if(msg.getRecipient().equals(msg.getBot().getNick()))
                {
-                  joinedchannels.remove(msg.getChannel());
+                  me.network.removeJoinedChannel(msg.getChannel());
+                  me.network.serialize();
                }
             }
          });
 
          this.bot.addModule(new Module() {
             @Override
-            public void onMessage(ChatMessage msg)
-            {
+            public void onMessage(ChatMessage msg) {
                if(msg.isBotAsked() && msg.count()>1 && msg.get(1).equalsIgnoreCase("version"))
                {
                   msg.respond(properties.get("versionstring"));
@@ -188,7 +211,7 @@ public class BotThread extends Thread {
          });
 
          this.bot.enableAutoReconnect();
-         this.bot.connect(network.getHost());
+         this.bot.connect(this.network.getHost());
 
          CommandLineParser parser = new CommandLineParser();
 
@@ -213,7 +236,7 @@ public class BotThread extends Thread {
             @Override
             public void handleCommand(CommandLineEvent e) {
                bot.disableAutoReconnect();
-               bot.quitServer();
+               bot.quitServer("The bot is shutting down!");
             }
          });
 
@@ -239,9 +262,7 @@ public class BotThread extends Thread {
       }
       catch(InterruptedIOException ex)
       {
-         this.writePipeLine("Thread exited.");
-         this.bot.disconnect();
-         this.bot.dispose();
+
       }
       catch (IOException | IrcException ex)
       {
@@ -249,6 +270,17 @@ public class BotThread extends Thread {
       }
    }
 
+   @Override
+   public void interrupt()
+   {
+      if(this.bot.isConnected())
+      {
+         this.writePipeLine("Thread exited.");
+         this.bot.quitServer("Bot is shutting down!");
+         this.bot.dispose();
+      }
+      super.interrupt();
+   }
 
 
 }

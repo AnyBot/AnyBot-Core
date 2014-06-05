@@ -32,12 +32,16 @@ public class Network
    private String botNickname;
    private String botIdent;
    private String botRealname;
+   private String debugChannel;
 
    @XmlTransient
    private BotThread botthread;
 
    @XmlTransient
    private Thread output;
+
+   @XmlTransient
+   private NetworkSettingsStore networkstore;
 
    @XmlElementWrapper(name = "AfterConnectCommands")
    @XmlElement(name = "IRCCommand")
@@ -47,14 +51,24 @@ public class Network
    @XmlElement(name = "IRCCommand")
    private final ArrayList<IRCCommand> beforeDisconnectCommands;
 
+   @XmlElementWrapper(name = "JoinedChannels")
+   @XmlElement(name = "JoinedChannel")
+   private final ArrayList<String> joinedChannels;
+
 
    public Network()
    {
       this.autostart = false;
       this.afterConnectCommands = new ArrayList<>();
       this.beforeDisconnectCommands = new ArrayList<>();
+      this.joinedChannels = new ArrayList<>();
       this.botthread = null;
       this.output = null;
+   }
+
+   public void setNetworkStore(NetworkSettingsStore store)
+   {
+      this.networkstore = store;
    }
 
    public BotThread getBotThread() throws IOException
@@ -131,6 +145,28 @@ public class Network
       return this.autostart;
    }
 
+   public void setDebugChannel(String channel)
+   {
+      if(channel==null || channel.trim().length()<1)
+      {
+         this.debugChannel=null;
+      }
+      else if(channel.startsWith("#") && channel.length()>1)
+      {
+         this.debugChannel = channel;
+      }
+   }
+
+   public String getDebugChannel()
+   {
+      return this.debugChannel;
+   }
+
+   public boolean isDebugChannelSet()
+   {
+      return (this.debugChannel!=null && this.debugChannel.startsWith("#") && this.debugChannel.length()>1);
+   }
+
    public String getHost() {
       return host;
    }
@@ -189,6 +225,34 @@ public class Network
       this.beforeDisconnectCommands.add(cmd);
    }
 
+   public void addJoinedChannel(String channel)
+   {
+      if(!this.joinedChannels.contains(channel))
+      {
+         this.joinedChannels.add(channel);
+      }
+   }
+
+   public void removeJoinedChannel(String channel)
+   {
+      if(this.joinedChannels.contains(channel))
+      {
+         this.joinedChannels.remove(channel);
+      }
+   }
+
+   public String[] getJoinedChannels()
+   {
+      return this.joinedChannels.toArray(new String[] {  });
+   }
+
+   public void serialize()
+   {
+      if(this.networkstore!=null)
+      {
+         this.networkstore.serialize();
+      }
+   }
 
 
 }
