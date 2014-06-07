@@ -7,9 +7,9 @@
 package eu.anynet.anybot.commands;
 
 import eu.anynet.anybot.AnyBot;
-import eu.anynet.anybot.BotThread;
-import eu.anynet.anybot.Network;
-import eu.anynet.anybot.NetworkSettingsStore;
+import eu.anynet.anybot.bot.BotThread;
+import eu.anynet.anybot.bot.Network;
+import eu.anynet.anybot.bot.NetworkSettingsStore;
 import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineModuleBase;

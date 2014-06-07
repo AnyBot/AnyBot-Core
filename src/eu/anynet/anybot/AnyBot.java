@@ -4,6 +4,9 @@
  */
 package eu.anynet.anybot;
 
+import eu.anynet.anybot.bot.ModuleUtils;
+import eu.anynet.anybot.bot.Network;
+import eu.anynet.anybot.bot.NetworkSettingsStore;
 import eu.anynet.anybot.wizard.Wizard;
 import eu.anynet.anybot.wizard.WizardQuestion;
 import eu.anynet.anybot.wizard.WizardQuestionFlag;
@@ -12,6 +15,7 @@ import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineModuleBase;
 import eu.anynet.java.util.CommandLineParser;
 import eu.anynet.java.util.Properties;
+import static eu.anynet.java.util.Properties.properties;
 import eu.anynet.java.util.SaveBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
@@ -28,7 +32,7 @@ public class AnyBot
 {
 
    public static final String BASEVERSION = "anybot-1.0";
-   public static final Properties properties = new Properties();
+   //public static final Properties properties = new Properties();
 
 
    public void begin()
@@ -44,6 +48,10 @@ public class AnyBot
       System.out.println("Current working directory: "+properties.get("fs.cwd"));
       System.out.println("Execution directory: "+properties.get("fs.execdir"));
       System.out.println();
+
+      // Set module folder
+      ModuleUtils.setModuleFolder(properties.get("fs.execdir")+"modules"+File.separator);
+      ModuleUtils.setSettingsFolder(properties.get("fs.settings")+"modules"+File.separator);
 
       // Available modules
       String modules = StringUtils.join(ModuleUtils.getModuleNames(), ", ");
