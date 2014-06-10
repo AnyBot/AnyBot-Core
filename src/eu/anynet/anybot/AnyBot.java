@@ -38,6 +38,8 @@ public class AnyBot
    public void begin()
    {
 
+      System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
+
       // Version info
       System.out.println("Welcome to AnyBot!");
       System.out.println("Version: "+properties.get("versionstring"));
