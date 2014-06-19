@@ -32,7 +32,6 @@ public class AnyBot
 {
 
    public static final String BASEVERSION = "anybot-1.0";
-   //public static final Properties properties = new Properties();
 
 
    public void begin()
