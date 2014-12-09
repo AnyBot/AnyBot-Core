@@ -133,7 +133,8 @@ public class Control extends CommandLineModuleBase {
             try {
                if(networks.getNetworkKeys().contains(netname))
                {
-                  networks.getNetwork(netname).getBotThread().getPipeEndpoint().send(e.get(2, -1)+"\n");
+                  String msg = e.get(2, -1);
+                  networks.getNetwork(netname).getBotThread().getPipeEndpoint().send(msg+"\n");
                }
                else
                {

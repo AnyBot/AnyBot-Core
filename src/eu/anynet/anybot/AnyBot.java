@@ -31,7 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 public class AnyBot
 {
 
-   public static final String BASEVERSION = "anybot-1.0";
+   public static final String BASEVERSION = "anybot-1.4";
 
 
    public void begin()
@@ -45,9 +45,10 @@ public class AnyBot
       System.out.println();
 
       // Directories
-      System.out.println("Settings folder: "+properties.get("fs.settings"));
-      System.out.println("Current working directory: "+properties.get("fs.cwd"));
-      System.out.println("Execution directory: "+properties.get("fs.execdir"));
+      System.out.println("Settings folder:        "+properties.get("fs.settings"));
+      System.out.println("Module folder:          "+properties.get("fs.execdir")+"modules"+File.separator);
+      System.out.println("Current working folder: "+properties.get("fs.cwd"));
+      System.out.println("Execution folder:       "+properties.get("fs.execdir"));
       System.out.println();
 
       // Set module folder
