@@ -31,9 +31,6 @@ import org.apache.commons.lang3.StringUtils;
 public class AnyBot
 {
 
-   public static final String BASEVERSION = "anybot-1.4";
-
-
    public void begin()
    {
 
@@ -56,8 +53,8 @@ public class AnyBot
       ModuleUtils.setSettingsFolder(properties.get("fs.settings")+"modules"+File.separator);
 
       // Available modules
-      String modules = StringUtils.join(ModuleUtils.getModuleNames(), ", ");
-      System.out.println(ModuleUtils.getModuleCount()+" modules found: "+ (modules==null ? "No modules found!" : modules));
+      String modules = StringUtils.join(ModuleUtils.getModuleVersionStrings(), "\n");
+      System.out.println(ModuleUtils.getModuleCount()+" modules found: "+ (modules==null ? "No modules found!" : "\n"+modules));
 
       // Load Network store
       File networkpoolfile = new File(properties.get("fs.settings")+"networks.xml");
@@ -186,7 +183,7 @@ public class AnyBot
       ResourceBundle vprops = ResourceBundle.getBundle("version", Locale.getDefault());
       properties.set("buildnumber", vprops.getString("BUILDNUMBER"));
       properties.set("builddate", vprops.getString("BUILDDATE"));
-      properties.set("version", BASEVERSION);
+      properties.set("version", vprops.getString("NAME")+"-"+vprops.getString("VERSION"));
       properties.set("versionbuild", properties.get("version")+" build "+properties.get("buildnumber"));
       properties.set("versionstring", properties.get("versionbuild")+" (compiled on "+properties.get("builddate")+")");
 
