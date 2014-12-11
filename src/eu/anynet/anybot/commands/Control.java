@@ -14,7 +14,7 @@ import eu.anynet.java.util.CommandLineEvent;
 import eu.anynet.java.util.CommandLineListener;
 import eu.anynet.java.util.CommandLineModuleBase;
 import eu.anynet.java.util.CommandLineParser;
-import eu.anynet.java.util.SaveBoolean;
+import eu.anynet.java.util.SafeBoolean;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
@@ -36,7 +36,7 @@ public class Control extends CommandLineModuleBase {
    public ArrayList<CommandLineListener> getCommands()
    {
       final NetworkSettingsStore networks = (NetworkSettingsStore)this.getObjectAt(0);
-      final SaveBoolean isRunning = (SaveBoolean)this.getObjectAt(1);
+      final SafeBoolean isRunning = (SafeBoolean)this.getObjectAt(1);
       ArrayList<CommandLineListener> commands = new ArrayList<>();
 
 

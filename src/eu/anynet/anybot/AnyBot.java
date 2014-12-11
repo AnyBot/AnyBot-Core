@@ -16,7 +16,7 @@ import eu.anynet.java.util.CommandLineModuleBase;
 import eu.anynet.java.util.CommandLineParser;
 import eu.anynet.java.util.Properties;
 import static eu.anynet.java.util.Properties.properties;
-import eu.anynet.java.util.SaveBoolean;
+import eu.anynet.java.util.SafeBoolean;
 import eu.anynet.java.util.Serializer;
 import java.io.File;
 import java.util.Locale;
@@ -68,7 +68,7 @@ public class AnyBot
 
       // Command line parser
       final CommandLineParser parser = new CommandLineParser();
-      final SaveBoolean isRunning = new SaveBoolean(true);
+      final SafeBoolean isRunning = new SafeBoolean(true);
 
       CommandLineModuleBase.loadAll(parser, new Object[] { networks, isRunning });
 
